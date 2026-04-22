@@ -201,7 +201,7 @@ class EnhancedTemplateManager:
                 os.path.dirname(os.path.abspath(__file__)))
             # Use the unified template file
             template_file_path = os.path.join(
-                current_dir, 'slide_layout_templates.json')
+                current_dir, 'templates', 'slide_layout_templates.json')
 
         try:
             with open(template_file_path, 'r', encoding='utf-8') as f:
@@ -515,7 +515,7 @@ def load_slide_templates(template_file_path: str = None) -> Dict:
         current_dir = os.path.dirname(
             os.path.dirname(os.path.abspath(__file__)))
         template_file_path = os.path.join(
-            current_dir, 'slide_layout_templates.json')
+            current_dir, 'templates', 'slide_layout_templates.json')
 
     try:
         with open(template_file_path, 'r', encoding='utf-8') as f:
