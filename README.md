@@ -156,6 +156,41 @@ docker run -d --rm -p 8000:8000 ppt_mcp_server -t http
 ```
 
 
+### Download Generated Presentations
+
+When running with HTTP transport, `save_presentation` stores generated `.pptx` files in the fixed directory `public/downloads/` under the project root.
+
+The tool returns a `download_url` field that points to the file download endpoint:
+
+```text
+http://localhost:8000/downloads/{filename}
+```
+
+The actual file download route is:
+
+```text
+GET /downloads/{filename}
+```
+
+You can configure the base URL used in the returned `download_url` by setting the `DOWNLOAD_URL` environment variable:
+
+```bash
+DOWNLOAD_URL=http://localhost:8000
+```
+
+If `DOWNLOAD_URL` is not set, the server falls back to the local HTTP address based on the configured port, such as `http://localhost:8000`.
+
+Example response from `save_presentation`:
+
+```json
+{
+  "message": "Presentation saved to /path/to/project/public/downloads/demo.pptx",
+  "file_path": "/path/to/project/public/downloads/demo.pptx",
+  "download_url": "http://localhost:8000/downloads/demo.pptx"
+}
+```
+
+
 ### MCP Configuration
 
 #### Option 1: Local Python Server
@@ -221,7 +256,7 @@ The server provides **34 specialized tools** organized into the following catego
 1. **create_presentation** - Create new presentations
 2. **create_presentation_from_template** - Create from templates with theme preservation
 3. **open_presentation** - Open existing presentations
-4. **save_presentation** - Save presentations to files
+4. **save_presentation** - Save presentations to `public/downloads` and return a download URL
 5. **get_presentation_info** - Get comprehensive presentation information
 6. **get_template_file_info** - Analyze template files and layouts
 7. **set_core_properties** - Set document properties
