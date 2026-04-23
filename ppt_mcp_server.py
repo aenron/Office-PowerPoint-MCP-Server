@@ -448,6 +448,7 @@ def main(transport: str = "stdio", port: int = 8000):
             print(f"Error starting server: {e}")
 
     elif transport == "sse":
+        app.settings.port = port
         # Run the FastMCP server in SSE (Server Side Events) mode
         app.run(transport='sse')
 
