@@ -14,229 +14,155 @@ def register_template_tools(app: FastMCP, presentations: Dict, get_current_prese
 
     @app.tool(
         annotations=ToolAnnotations(
-            title="List Slide Templates",
-            readOnlyHint=True,
+            title="Manage Slide Templates",
         ),
     )
-    def list_slide_templates() -> Dict:
-        """List all available slide layout templates."""
-        try:
-            available_templates = template_utils.get_available_templates()
-            usage_examples = template_utils.get_template_usage_examples()
-
-            return {
-                "available_templates": available_templates,
-                "total_templates": len(available_templates),
-                "usage_examples": usage_examples,
-                "message": "Use apply_slide_template to apply templates to slides"
-            }
-        except Exception as e:
-            return {
-                "error": f"Failed to list templates: {str(e)}"
-            }
-
-    @app.tool(
-        annotations=ToolAnnotations(
-            title="Apply Slide Template",
-        ),
-    )
-    def apply_slide_template(
+    def manage_slide_templates(
+        operation: str,
         presentation_id: str,
         slide_index: int,
         template_id: str,
         color_scheme: str = "modern_blue",
         content_mapping: Dict[str, str] = {},
         image_paths: Dict[str, str] = {},
+        template_sequence: List[Dict[str, Any]] = [],
+        presentation_title: str = "",
+        layout_index: int = -1,
     ) -> Dict:
-        """
-        Apply a structured layout template to an existing slide.
-        This modifies slide layout and content structure using predefined templates.
-
-        Args:
-            slide_index: Index of the slide to apply template to
-            template_id: ID of the template to apply (e.g., 'title_slide', 'text_with_image')
-            color_scheme: Color scheme to use ('modern_blue', 'corporate_gray', 'elegant_green', 'warm_red')
-            content_mapping: Dictionary mapping element roles to custom content
-            image_paths: Dictionary mapping image element roles to file paths
-            presentation_id: Presentation ID
-        """
-        if presentation_id not in presentations:
-            return {
-                "error": "No presentation is currently loaded or the specified ID is invalid"
-            }
-
-        pres = presentations[presentation_id]
-
-        if slide_index < 0 or slide_index >= len(pres.slides):
-            return {
-                "error": f"Invalid slide index: {slide_index}. Available slides: 0-{len(pres.slides) - 1}"
-            }
-
-        slide = pres.slides[slide_index]
-
+        """List, inspect, apply, and create slide templates."""
         try:
-            result = template_utils.apply_slide_template(
-                slide, template_id, color_scheme,
-                content_mapping, image_paths
-            )
+            if operation == "list":
+                available_templates = template_utils.get_available_templates()
+                usage_examples = template_utils.get_template_usage_examples()
 
-            if result['success']:
                 return {
-                    "message": f"Applied template '{template_id}' to slide {slide_index}",
-                    "slide_index": slide_index,
-                    "template_applied": result
+                    "available_templates": available_templates,
+                    "total_templates": len(available_templates),
+                    "usage_examples": usage_examples,
+                    "message": "Use manage_slide_templates with operation='apply_to_slide' to apply templates to slides"
                 }
-            else:
+
+            if operation == "get_info":
+                templates_data = template_utils.load_slide_templates()
+
+                if template_id not in templates_data.get('templates', {}):
+                    available_templates = list(
+                        templates_data.get('templates', {}).keys())
+                    return {
+                        "error": f"Template '{template_id}' not found",
+                        "available_templates": available_templates
+                    }
+
+                template = templates_data['templates'][template_id]
+
+                # Extract element information
+                elements_info = []
+                for element in template.get('elements', []):
+                    element_info = {
+                        "type": element.get('type'),
+                        "role": element.get('role'),
+                        "position": element.get('position'),
+                        "placeholder_text": element.get('placeholder_text', ''),
+                        "styling_options": list(element.get('styling', {}).keys())
+                    }
+                    elements_info.append(element_info)
+
+                return {
+                    "template_id": template_id,
+                    "name": template.get('name'),
+                    "description": template.get('description'),
+                    "layout_type": template.get('layout_type'),
+                    "elements": elements_info,
+                    "element_count": len(elements_info),
+                    "has_background": 'background' in template,
+                    "background_type": template.get('background', {}).get('type'),
+                    "color_schemes": list(templates_data.get('color_schemes', {}).keys()),
+                    "usage_tip": f"Use manage_slide_templates with operation='create_slide' and template_id='{template_id}' to create a slide with this layout"
+                }
+
+            if presentation_id not in presentations:
+                return {
+                    "error": "No presentation is currently loaded or the specified ID is invalid"
+                }
+
+            pres = presentations[presentation_id]
+
+            if operation == "apply_to_slide":
+                if slide_index < 0 or slide_index >= len(pres.slides):
+                    return {
+                        "error": f"Invalid slide index: {slide_index}. Available slides: 0-{len(pres.slides) - 1}"
+                    }
+
+                slide = pres.slides[slide_index]
+                result = template_utils.apply_slide_template(
+                    slide, template_id, color_scheme,
+                    content_mapping, image_paths
+                )
+
+                if result['success']:
+                    return {
+                        "message": f"Applied template '{template_id}' to slide {slide_index}",
+                        "slide_index": slide_index,
+                        "template_applied": result
+                    }
+
                 return {
                     "error": f"Failed to apply template: {result.get('error', 'Unknown error')}"
                 }
 
-        except Exception as e:
-            return {
-                "error": f"Failed to apply template: {str(e)}"
-            }
+            if operation == "create_slide":
+                # Validate layout index when explicitly provided
+                if layout_index != -1 and (layout_index < 0 or layout_index >= len(pres.slide_layouts)):
+                    return {
+                        "error": f"Invalid layout index: {layout_index}. Available layouts: 0-{len(pres.slide_layouts) - 1}"
+                    }
 
-    @app.tool(
-        annotations=ToolAnnotations(
-            title="Create Slide from Template",
-        ),
-    )
-    def create_slide_from_template(
-        presentation_id: str,
-        template_id: str,
-        color_scheme: str = "modern_blue",
-        content_mapping: Dict[str, str] = {},
-        image_paths: Dict[str, str] = {},
-        layout_index: int = -1,
-    ) -> Dict:
-        """
-        Create a new slide using a layout template.
+                # Add new slide
+                layout = pres.slide_layouts[layout_index] if layout_index != -1 else template_utils.get_template_base_layout(
+                    pres)
+                slide = pres.slides.add_slide(layout)
+                created_slide_index = len(pres.slides) - 1
 
-        Args:
-            template_id: ID of the template to use (e.g., 'title_slide', 'text_with_image')
-            color_scheme: Color scheme to use ('modern_blue', 'corporate_gray', 'elegant_green', 'warm_red')
-            content_mapping: Dictionary mapping element roles to custom content
-            image_paths: Dictionary mapping image element roles to file paths
-            layout_index: PowerPoint layout index to use as base, or -1 to use the default blank-compatible layout
-            presentation_id: Presentation ID
-        """
-        if presentation_id not in presentations:
-            return {
-                "error": "No presentation is currently loaded or the specified ID is invalid"
-            }
+                # Apply template
+                result = template_utils.apply_slide_template(
+                    slide, template_id, color_scheme,
+                    content_mapping, image_paths
+                )
 
-        pres = presentations[presentation_id]
+                if result['success']:
+                    return {
+                        "message": f"Created slide {created_slide_index} using template '{template_id}'",
+                        "slide_index": created_slide_index,
+                        "template_applied": result
+                    }
 
-        # Validate layout index when explicitly provided
-        if layout_index != -1 and (layout_index < 0 or layout_index >= len(pres.slide_layouts)):
-            return {
-                "error": f"Invalid layout index: {layout_index}. Available layouts: 0-{len(pres.slide_layouts) - 1}"
-            }
-
-        try:
-            # Add new slide
-            layout = pres.slide_layouts[layout_index] if layout_index != -1 else template_utils.get_template_base_layout(
-                pres)
-            slide = pres.slides.add_slide(layout)
-            slide_index = len(pres.slides) - 1
-
-            # Apply template
-            result = template_utils.apply_slide_template(
-                slide, template_id, color_scheme,
-                content_mapping, image_paths
-            )
-
-            if result['success']:
-                return {
-                    "message": f"Created slide {slide_index} using template '{template_id}'",
-                    "slide_index": slide_index,
-                    "template_applied": result
-                }
-            else:
                 return {
                     "error": f"Failed to apply template to new slide: {result.get('error', 'Unknown error')}"
                 }
 
-        except Exception as e:
-            return {
-                "error": f"Failed to create slide from template: {str(e)}"
-            }
+            if operation == "create_presentation":
+                if not template_sequence:
+                    return {
+                        "error": "Template sequence cannot be empty"
+                    }
 
-    @app.tool(
-        annotations=ToolAnnotations(
-            title="Create Presentation from Templates",
-        ),
-    )
-    def create_presentation_from_templates(
-        presentation_id: str,
-        template_sequence: List[Dict[str, Any]],
-        color_scheme: str = "modern_blue",
-        presentation_title: str = "",
-    ) -> Dict:
-        """
-        Create a complete presentation from a sequence of templates.
+                # Set presentation title if provided
+                if presentation_title:
+                    pres.core_properties.title = presentation_title
 
-        Args:
-            template_sequence: List of template configurations, each containing:
-                - template_id: Template to use
-                - content: Content mapping for the template
-                - images: Image path mapping for the template
-            color_scheme: Color scheme to apply to all slides
-            presentation_title: Presentation title, or an empty string to keep the current title
-            presentation_id: Presentation ID
+                # Create slides from template sequence
+                result = template_utils.create_presentation_from_template_sequence(
+                    pres, template_sequence, color_scheme
+                )
 
-        Example template_sequence:
-        [
-            {
-                "template_id": "title_slide",
-                "content": {
-                    "title": "My Presentation",
-                    "subtitle": "Annual Report 2024",
-                    "author": "John Doe"
-                }
-            },
-            {
-                "template_id": "text_with_image",
-                "content": {
-                    "title": "Key Results",
-                    "content": "• Achievement 1\\n• Achievement 2"
-                },
-                "images": {
-                    "supporting": "/path/to/image.jpg"
-                }
-            }
-        ]
-        """
-        if presentation_id not in presentations:
-            return {
-                "error": "No presentation is currently loaded or the specified ID is invalid"
-            }
+                if result['success']:
+                    return {
+                        "message": f"Created presentation with {result['total_slides']} slides",
+                        "presentation_id": presentation_id,
+                        "creation_result": result,
+                        "total_slides": len(pres.slides)
+                    }
 
-        pres = presentations[presentation_id]
-
-        if not template_sequence:
-            return {
-                "error": "Template sequence cannot be empty"
-            }
-
-        try:
-            # Set presentation title if provided
-            if presentation_title:
-                pres.core_properties.title = presentation_title
-
-            # Create slides from template sequence
-            result = template_utils.create_presentation_from_template_sequence(
-                pres, template_sequence, color_scheme
-            )
-
-            if result['success']:
-                return {
-                    "message": f"Created presentation with {result['total_slides']} slides",
-                    "presentation_id": presentation_id,
-                    "creation_result": result,
-                    "total_slides": len(pres.slides)
-                }
-            else:
                 return {
                     "warning": "Presentation created with some errors",
                     "presentation_id": presentation_id,
@@ -244,65 +170,13 @@ def register_template_tools(app: FastMCP, presentations: Dict, get_current_prese
                     "total_slides": len(pres.slides)
                 }
 
-        except Exception as e:
             return {
-                "error": f"Failed to create presentation from templates: {str(e)}"
-            }
-
-    @app.tool(
-        annotations=ToolAnnotations(
-            title="Get Template Info",
-            readOnlyHint=True,
-        ),
-    )
-    def get_template_info(template_id: str) -> Dict:
-        """
-        Get detailed information about a specific template.
-
-        Args:
-            template_id: ID of the template to get information about
-        """
-        try:
-            templates_data = template_utils.load_slide_templates()
-
-            if template_id not in templates_data.get('templates', {}):
-                available_templates = list(
-                    templates_data.get('templates', {}).keys())
-                return {
-                    "error": f"Template '{template_id}' not found",
-                    "available_templates": available_templates
-                }
-
-            template = templates_data['templates'][template_id]
-
-            # Extract element information
-            elements_info = []
-            for element in template.get('elements', []):
-                element_info = {
-                    "type": element.get('type'),
-                    "role": element.get('role'),
-                    "position": element.get('position'),
-                    "placeholder_text": element.get('placeholder_text', ''),
-                    "styling_options": list(element.get('styling', {}).keys())
-                }
-                elements_info.append(element_info)
-
-            return {
-                "template_id": template_id,
-                "name": template.get('name'),
-                "description": template.get('description'),
-                "layout_type": template.get('layout_type'),
-                "elements": elements_info,
-                "element_count": len(elements_info),
-                "has_background": 'background' in template,
-                "background_type": template.get('background', {}).get('type'),
-                "color_schemes": list(templates_data.get('color_schemes', {}).keys()),
-                "usage_tip": f"Use create_slide_from_template with template_id='{template_id}' to create a slide with this layout"
+                "error": "Invalid template operation. Use: list, get_info, apply_to_slide, create_slide, create_presentation"
             }
 
         except Exception as e:
             return {
-                "error": f"Failed to get template info: {str(e)}"
+                "error": f"Failed to manage slide templates: {str(e)}"
             }
 
     @app.tool(
