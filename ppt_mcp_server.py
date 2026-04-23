@@ -432,10 +432,11 @@ def get_server_info() -> Dict:
 # ---- Main Function ----
 
 
-def main(transport: str = "stdio", port: int = 8000):
+def main(transport: str = "stdio", port: int = 8000, host: str = "127.0.0.1"):
     if transport == "http":
         import asyncio
         # Set the port for HTTP transport
+        app.settings.host = host
         app.settings.port = port
         # Start the FastMCP server with HTTP transport
         try:
@@ -448,6 +449,7 @@ def main(transport: str = "stdio", port: int = 8000):
             print(f"Error starting server: {e}")
 
     elif transport == "sse":
+        app.settings.host = host
         app.settings.port = port
         # Run the FastMCP server in SSE (Server Side Events) mode
         app.run(transport='sse')
@@ -478,5 +480,12 @@ if __name__ == "__main__":
         default=8000,
         help="Port to run the MCP server on (default: 8000)"
     )
+
+    parser.add_argument(
+        "--host",
+        type=str,
+        default="127.0.0.1",
+        help="Host to bind the MCP server to (default: 127.0.0.1)"
+    )
     args = parser.parse_args()
-    main(args.transport, args.port)
+    main(args.transport, args.port, args.host)
