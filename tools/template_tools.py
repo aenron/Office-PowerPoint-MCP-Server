@@ -3,7 +3,7 @@ Enhanced template-based slide creation tools for PowerPoint MCP Server.
 Handles template application, template management, automated slide generation,
 and advanced features like dynamic sizing, auto-wrapping, and visual effects.
 """
-from typing import Dict, List, Optional, Any
+from typing import Dict, List, Any
 from mcp.server.fastmcp import FastMCP
 from mcp.types import ToolAnnotations
 import utils.template_utils as template_utils
@@ -41,12 +41,12 @@ def register_template_tools(app: FastMCP, presentations: Dict, get_current_prese
         ),
     )
     def apply_slide_template(
+        presentation_id: str,
         slide_index: int,
         template_id: str,
         color_scheme: str = "modern_blue",
-        content_mapping: Optional[Dict[str, str]] = None,
-        image_paths: Optional[Dict[str, str]] = None,
-        presentation_id: Optional[str] = None
+        content_mapping: Dict[str, str] = {},
+        image_paths: Dict[str, str] = {},
     ) -> Dict:
         """
         Apply a structured layout template to an existing slide.
@@ -58,16 +58,14 @@ def register_template_tools(app: FastMCP, presentations: Dict, get_current_prese
             color_scheme: Color scheme to use ('modern_blue', 'corporate_gray', 'elegant_green', 'warm_red')
             content_mapping: Dictionary mapping element roles to custom content
             image_paths: Dictionary mapping image element roles to file paths
-            presentation_id: Presentation ID (uses current if None)
+            presentation_id: Presentation ID
         """
-        pres_id = presentation_id if presentation_id is not None else get_current_presentation_id()
-
-        if pres_id is None or pres_id not in presentations:
+        if presentation_id not in presentations:
             return {
                 "error": "No presentation is currently loaded or the specified ID is invalid"
             }
 
-        pres = presentations[pres_id]
+        pres = presentations[presentation_id]
 
         if slide_index < 0 or slide_index >= len(pres.slides):
             return {
@@ -79,7 +77,7 @@ def register_template_tools(app: FastMCP, presentations: Dict, get_current_prese
         try:
             result = template_utils.apply_slide_template(
                 slide, template_id, color_scheme,
-                content_mapping or {}, image_paths or {}
+                content_mapping, image_paths
             )
 
             if result['success']:
@@ -104,12 +102,12 @@ def register_template_tools(app: FastMCP, presentations: Dict, get_current_prese
         ),
     )
     def create_slide_from_template(
+        presentation_id: str,
         template_id: str,
         color_scheme: str = "modern_blue",
-        content_mapping: Optional[Dict[str, str]] = None,
-        image_paths: Optional[Dict[str, str]] = None,
-        layout_index: Optional[int] = None,
-        presentation_id: Optional[str] = None
+        content_mapping: Dict[str, str] = {},
+        image_paths: Dict[str, str] = {},
+        layout_index: int = -1,
     ) -> Dict:
         """
         Create a new slide using a layout template.
@@ -119,27 +117,25 @@ def register_template_tools(app: FastMCP, presentations: Dict, get_current_prese
             color_scheme: Color scheme to use ('modern_blue', 'corporate_gray', 'elegant_green', 'warm_red')
             content_mapping: Dictionary mapping element roles to custom content
             image_paths: Dictionary mapping image element roles to file paths
-            layout_index: Optional PowerPoint layout index to use as base (defaults to a blank-compatible layout)
-            presentation_id: Presentation ID (uses current if None)
+            layout_index: PowerPoint layout index to use as base, or -1 to use the default blank-compatible layout
+            presentation_id: Presentation ID
         """
-        pres_id = presentation_id if presentation_id is not None else get_current_presentation_id()
-
-        if pres_id is None or pres_id not in presentations:
+        if presentation_id not in presentations:
             return {
                 "error": "No presentation is currently loaded or the specified ID is invalid"
             }
 
-        pres = presentations[pres_id]
+        pres = presentations[presentation_id]
 
         # Validate layout index when explicitly provided
-        if layout_index is not None and (layout_index < 0 or layout_index >= len(pres.slide_layouts)):
+        if layout_index != -1 and (layout_index < 0 or layout_index >= len(pres.slide_layouts)):
             return {
                 "error": f"Invalid layout index: {layout_index}. Available layouts: 0-{len(pres.slide_layouts) - 1}"
             }
 
         try:
             # Add new slide
-            layout = pres.slide_layouts[layout_index] if layout_index is not None else template_utils.get_template_base_layout(
+            layout = pres.slide_layouts[layout_index] if layout_index != -1 else template_utils.get_template_base_layout(
                 pres)
             slide = pres.slides.add_slide(layout)
             slide_index = len(pres.slides) - 1
@@ -147,7 +143,7 @@ def register_template_tools(app: FastMCP, presentations: Dict, get_current_prese
             # Apply template
             result = template_utils.apply_slide_template(
                 slide, template_id, color_scheme,
-                content_mapping or {}, image_paths or {}
+                content_mapping, image_paths
             )
 
             if result['success']:
@@ -172,10 +168,10 @@ def register_template_tools(app: FastMCP, presentations: Dict, get_current_prese
         ),
     )
     def create_presentation_from_templates(
+        presentation_id: str,
         template_sequence: List[Dict[str, Any]],
         color_scheme: str = "modern_blue",
-        presentation_title: Optional[str] = None,
-        presentation_id: Optional[str] = None
+        presentation_title: str = "",
     ) -> Dict:
         """
         Create a complete presentation from a sequence of templates.
@@ -186,8 +182,8 @@ def register_template_tools(app: FastMCP, presentations: Dict, get_current_prese
                 - content: Content mapping for the template
                 - images: Image path mapping for the template
             color_scheme: Color scheme to apply to all slides
-            presentation_title: Optional title for the presentation
-            presentation_id: Presentation ID (uses current if None)
+            presentation_title: Presentation title, or an empty string to keep the current title
+            presentation_id: Presentation ID
 
         Example template_sequence:
         [
@@ -211,14 +207,12 @@ def register_template_tools(app: FastMCP, presentations: Dict, get_current_prese
             }
         ]
         """
-        pres_id = presentation_id if presentation_id is not None else get_current_presentation_id()
-
-        if pres_id is None or pres_id not in presentations:
+        if presentation_id not in presentations:
             return {
                 "error": "No presentation is currently loaded or the specified ID is invalid"
             }
 
-        pres = presentations[pres_id]
+        pres = presentations[presentation_id]
 
         if not template_sequence:
             return {
@@ -238,14 +232,14 @@ def register_template_tools(app: FastMCP, presentations: Dict, get_current_prese
             if result['success']:
                 return {
                     "message": f"Created presentation with {result['total_slides']} slides",
-                    "presentation_id": pres_id,
+                    "presentation_id": presentation_id,
                     "creation_result": result,
                     "total_slides": len(pres.slides)
                 }
             else:
                 return {
                     "warning": "Presentation created with some errors",
-                    "presentation_id": pres_id,
+                    "presentation_id": presentation_id,
                     "creation_result": result,
                     "total_slides": len(pres.slides)
                 }
@@ -317,13 +311,13 @@ def register_template_tools(app: FastMCP, presentations: Dict, get_current_prese
         ),
     )
     def auto_generate_presentation(
+        presentation_id: str,
         topic: str,
         slide_count: int = 5,
         presentation_type: str = "business",
         color_scheme: str = "modern_blue",
         include_charts: bool = True,
         include_images: bool = False,
-        presentation_id: Optional[str] = None
     ) -> Dict:
         """
         Automatically generate a presentation based on topic and preferences.
@@ -335,11 +329,9 @@ def register_template_tools(app: FastMCP, presentations: Dict, get_current_prese
             color_scheme: Color scheme to use
             include_charts: Whether to include chart slides
             include_images: Whether to include image placeholders
-            presentation_id: Presentation ID (uses current if None)
+            presentation_id: Presentation ID
         """
-        pres_id = presentation_id if presentation_id is not None else get_current_presentation_id()
-
-        if pres_id is None or pres_id not in presentations:
+        if presentation_id not in presentations:
             return {
                 "error": "No presentation is currently loaded or the specified ID is invalid"
             }
@@ -428,7 +420,7 @@ def register_template_tools(app: FastMCP, presentations: Dict, get_current_prese
 
             # Create the presentation
             result = template_utils.create_presentation_from_template_sequence(
-                presentations[pres_id], template_sequence, color_scheme
+                presentations[presentation_id], template_sequence, color_scheme
             )
 
             return {
@@ -454,13 +446,13 @@ def register_template_tools(app: FastMCP, presentations: Dict, get_current_prese
         ),
     )
     def optimize_slide_text(
+        presentation_id: str,
         slide_index: int,
         auto_resize: bool = True,
         auto_wrap: bool = True,
         optimize_spacing: bool = True,
         min_font_size: int = 8,
         max_font_size: int = 36,
-        presentation_id: Optional[str] = None
     ) -> Dict:
         """
         Optimize text elements on a slide for better readability and fit.
@@ -472,16 +464,14 @@ def register_template_tools(app: FastMCP, presentations: Dict, get_current_prese
             optimize_spacing: Whether to optimize line spacing
             min_font_size: Minimum allowed font size
             max_font_size: Maximum allowed font size
-            presentation_id: Presentation ID (uses current if None)
+            presentation_id: Presentation ID
         """
-        pres_id = presentation_id if presentation_id is not None else get_current_presentation_id()
-
-        if pres_id is None or pres_id not in presentations:
+        if presentation_id not in presentations:
             return {
                 "error": "No presentation is currently loaded or the specified ID is invalid"
             }
 
-        pres = presentations[pres_id]
+        pres = presentations[presentation_id]
 
         if slide_index < 0 or slide_index >= len(pres.slides):
             return {

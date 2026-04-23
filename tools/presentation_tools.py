@@ -2,7 +2,7 @@
 Presentation management tools for PowerPoint MCP Server.
 Handles presentation creation, opening, saving, and core properties.
 """
-from typing import Dict, List, Optional, Any
+from typing import Dict, List, Any
 import os
 from starlette.requests import Request
 from starlette.responses import FileResponse, JSONResponse
@@ -18,7 +18,7 @@ def register_presentation_tools(app: FastMCP, presentations: Dict, get_current_p
     download_url = os.environ.get("DOWNLOAD_URL")
     os.makedirs(download_dir, exist_ok=True)
 
-    def get_effective_template_directories(template_directory: Optional[str] = None) -> List[str]:
+    def get_effective_template_directories(template_directory: str = "") -> List[str]:
         if template_directory:
             expanded_directory = os.path.abspath(
                 os.path.expanduser(template_directory))
@@ -34,7 +34,7 @@ def register_presentation_tools(app: FastMCP, presentations: Dict, get_current_p
 
         return directories
 
-    def resolve_template_path(template_name: str, template_directory: Optional[str] = None) -> Dict[str, Any]:
+    def resolve_template_path(template_name: str, template_directory: str = "") -> Dict[str, Any]:
         if os.path.exists(template_name) and os.path.isfile(template_name):
             return {
                 "found": True,
@@ -70,21 +70,42 @@ def register_presentation_tools(app: FastMCP, presentations: Dict, get_current_p
             "searched_directories": search_directories
         }
 
+    def get_required_presentation(presentation_id: str):
+        if presentation_id not in presentations:
+            return None, {
+                "error": "No presentation is currently loaded or the specified ID is invalid"
+            }
+        return presentations[presentation_id], None
+
+    def update_core_property(presentation_id: str, property_name: str, property_value: str) -> Dict:
+        pres, error = get_required_presentation(presentation_id)
+        if error:
+            return error
+
+        try:
+            ppt_utils.set_core_properties(
+                pres,
+                **{property_name: property_value}
+            )
+            return {
+                "message": f"Core property '{property_name}' updated successfully",
+                "presentation_id": presentation_id,
+                property_name: property_value
+            }
+        except Exception as e:
+            return {
+                "error": f"Failed to set core property '{property_name}': {str(e)}"
+            }
+
     @app.tool(
         annotations=ToolAnnotations(
             title="List Presentation Templates",
             readOnlyHint=True,
         ),
     )
-    def list_presentation_templates(template_directory: Optional[str] = None) -> Dict:
-        """List available PowerPoint template files from the specified directory."""
-        search_directories = get_effective_template_directories(
-            template_directory)
-
-        if template_directory and not search_directories:
-            return {
-                "error": f"Template directory not found: {template_directory}"
-            }
+    def list_presentation_templates() -> Dict:
+        """List available PowerPoint template files from the default template directories."""
+        search_directories = get_effective_template_directories()
 
         templates: List[Dict[str, str]] = []
         seen_paths = set()
@@ -111,7 +132,6 @@ def register_presentation_tools(app: FastMCP, presentations: Dict, get_current_p
         templates.sort(key=lambda item: item["template_name"].lower())
 
         return {
-            "template_directory": os.path.abspath(template_directory) if template_directory else None,
             "searched_directories": search_directories,
             "templates": templates,
             "total_templates": len(templates)
@@ -136,14 +156,10 @@ def register_presentation_tools(app: FastMCP, presentations: Dict, get_current_p
             title="Create Presentation",
         ),
     )
-    def create_presentation(id: Optional[str] = None) -> Dict:
+    def create_presentation(id: str) -> Dict:
         """Create a new PowerPoint presentation."""
         # Create a new presentation
         pres = ppt_utils.create_presentation()
-
-        # Generate an ID if not provided
-        if id is None:
-            id = f"presentation_{len(presentations) + 1}"
 
         # Store the presentation
         presentations[id] = pres
@@ -160,10 +176,9 @@ def register_presentation_tools(app: FastMCP, presentations: Dict, get_current_p
             title="Create Presentation from Template",
         ),
     )
-    def create_presentation_from_template(template_path: str, id: Optional[str] = None, template_directory: Optional[str] = None) -> Dict:
+    def create_presentation_from_template(template_path: str, id: str) -> Dict:
         """Create a new PowerPoint presentation from a template file."""
-        resolved_template = resolve_template_path(
-            template_path, template_directory)
+        resolved_template = resolve_template_path(template_path)
         if not resolved_template["found"]:
             env_path_info = f" (PPT_TEMPLATE_PATH: {os.environ.get('PPT_TEMPLATE_PATH', 'not set')})" if os.environ.get(
                 'PPT_TEMPLATE_PATH') else ""
@@ -179,10 +194,6 @@ def register_presentation_tools(app: FastMCP, presentations: Dict, get_current_p
             return {
                 "error": f"Failed to create presentation from template: {str(e)}"
             }
-
-        # Generate an ID if not provided
-        if id is None:
-            id = f"presentation_{len(presentations) + 1}"
 
         # Store the presentation
         presentations[id] = pres
@@ -202,7 +213,7 @@ def register_presentation_tools(app: FastMCP, presentations: Dict, get_current_p
             readOnlyHint=True,
         ),
     )
-    def open_presentation(file_path: str, id: Optional[str] = None) -> Dict:
+    def open_presentation(file_path: str, id: str) -> Dict:
         """Open an existing PowerPoint presentation from a file."""
         # Check if file exists
         if not os.path.exists(file_path):
@@ -217,10 +228,6 @@ def register_presentation_tools(app: FastMCP, presentations: Dict, get_current_p
             return {
                 "error": f"Failed to open presentation: {str(e)}"
             }
-
-        # Generate an ID if not provided
-        if id is None:
-            id = f"presentation_{len(presentations) + 1}"
 
         # Store the presentation
         presentations[id] = pres
@@ -237,26 +244,21 @@ def register_presentation_tools(app: FastMCP, presentations: Dict, get_current_p
             destructiveHint=True,
         ),
     )
-    def save_presentation(file_path: str, presentation_id: Optional[str] = None) -> Dict:
+    def save_presentation(file_path: str, presentation_id: str) -> Dict:
         """Save a presentation to a file."""
-        # Use the specified presentation or the current one
-        pres_id = presentation_id if presentation_id is not None else get_current_presentation_id()
-
-        if pres_id is None or pres_id not in presentations:
-            return {
-                "error": "No presentation is currently loaded or the specified ID is invalid"
-            }
+        pres, error = get_required_presentation(presentation_id)
+        if error:
+            return error
 
         file_name = os.path.basename(
-            file_path) if file_path else f"{pres_id}.pptx"
+            file_path) if file_path else f"{presentation_id}.pptx"
         if not file_name.lower().endswith('.pptx'):
             file_name = f"{file_name}.pptx"
 
         saved_path = os.path.join(download_dir, file_name)
 
         try:
-            saved_path = ppt_utils.save_presentation(
-                presentations[pres_id], saved_path)
+            saved_path = ppt_utils.save_presentation(pres, saved_path)
             port = getattr(app.settings, "port", 8000)
             download_base_url = (
                 download_url or f"http://localhost:{port}").rstrip("/")
@@ -276,20 +278,15 @@ def register_presentation_tools(app: FastMCP, presentations: Dict, get_current_p
             readOnlyHint=True,
         ),
     )
-    def get_presentation_info(presentation_id: Optional[str] = None) -> Dict:
+    def get_presentation_info(presentation_id: str) -> Dict:
         """Get information about a presentation."""
-        pres_id = presentation_id if presentation_id is not None else get_current_presentation_id()
-
-        if pres_id is None or pres_id not in presentations:
-            return {
-                "error": "No presentation is currently loaded or the specified ID is invalid"
-            }
-
-        pres = presentations[pres_id]
+        pres, error = get_required_presentation(presentation_id)
+        if error:
+            return error
 
         try:
             info = ppt_utils.get_presentation_info(pres)
-            info["presentation_id"] = pres_id
+            info["presentation_id"] = presentation_id
             return info
         except Exception as e:
             return {
@@ -302,10 +299,9 @@ def register_presentation_tools(app: FastMCP, presentations: Dict, get_current_p
             readOnlyHint=True,
         ),
     )
-    def get_template_file_info(template_path: str, template_directory: Optional[str] = None) -> Dict:
+    def get_template_file_info(template_path: str) -> Dict:
         """Get information about a template file including layouts and properties."""
-        resolved_template = resolve_template_path(
-            template_path, template_directory)
+        resolved_template = resolve_template_path(template_path)
         if not resolved_template["found"]:
             return {
                 "error": f"{resolved_template['error']}. Searched in {', '.join(resolved_template['searched_directories'])}"
@@ -324,41 +320,20 @@ def register_presentation_tools(app: FastMCP, presentations: Dict, get_current_p
 
     @app.tool(
         annotations=ToolAnnotations(
-            title="Set Core Properties",
+            title="Set Presentation Core Property",
         ),
     )
-    def set_core_properties(
-        title: Optional[str] = None,
-        subject: Optional[str] = None,
-        author: Optional[str] = None,
-        keywords: Optional[str] = None,
-        comments: Optional[str] = None,
-        presentation_id: Optional[str] = None
+    def set_presentation_core_property(
+        presentation_id: str,
+        property_name: str,
+        property_value: str,
     ) -> Dict:
-        """Set core document properties."""
-        pres_id = presentation_id if presentation_id is not None else get_current_presentation_id()
-
-        if pres_id is None or pres_id not in presentations:
+        """Set a presentation core property."""
+        valid_properties = ["title", "subject",
+                            "author", "keywords", "comments"]
+        if property_name not in valid_properties:
             return {
-                "error": "No presentation is currently loaded or the specified ID is invalid"
+                "error": f"Invalid core property '{property_name}'. Valid properties are: {', '.join(valid_properties)}"
             }
 
-        pres = presentations[pres_id]
-
-        try:
-            ppt_utils.set_core_properties(
-                pres,
-                title=title,
-                subject=subject,
-                author=author,
-                keywords=keywords,
-                comments=comments
-            )
-
-            return {
-                "message": "Core properties updated successfully"
-            }
-        except Exception as e:
-            return {
-                "error": f"Failed to set core properties: {str(e)}"
-            }
+        return update_core_property(presentation_id, property_name, property_value)

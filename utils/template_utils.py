@@ -6,7 +6,7 @@ Combines features from both basic and enhanced template systems.
 import json
 import os
 import re
-from typing import Dict, List, Optional, Any, Tuple
+from typing import Dict, List, Any, Tuple
 from pptx import Presentation
 from pptx.util import Inches, Pt
 from pptx.dml.color import RGBColor

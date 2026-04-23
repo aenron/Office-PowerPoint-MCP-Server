@@ -3,61 +3,52 @@ Slide transition management tools for PowerPoint MCP Server.
 Implements slide transition and timing capabilities.
 """
 
-from typing import Dict, List, Optional, Any
+from typing import Dict
 from mcp.types import ToolAnnotations
 
-def register_transition_tools(app, presentations, get_current_presentation_id, validate_parameters, 
-                          is_positive, is_non_negative, is_in_range, is_valid_rgb):
+
+def register_transition_tools(app, presentations, get_current_presentation_id, validate_parameters,
+                              is_positive, is_non_negative, is_in_range, is_valid_rgb):
     """Register slide transition management tools with the FastMCP app."""
-    
+
+    def get_slide_and_presentation(presentation_id: str, slide_index: int):
+        if presentation_id not in presentations:
+            return None, None, {"error": "Presentation not found"}
+
+        pres = presentations[presentation_id]
+
+        if not (0 <= slide_index < len(pres.slides)):
+            return None, None, {"error": f"Slide index {slide_index} out of range"}
+
+        return pres, pres.slides[slide_index], None
+
     @app.tool(
         annotations=ToolAnnotations(
-            title="Manage Slide Transitions",
+            title="Manage Slide Transition",
         ),
     )
-    def manage_slide_transitions(
-        slide_index: int,
+    def manage_slide_transition(
         operation: str,
-        transition_type: str = None,
-        duration: float = 1.0,
-        presentation_id: str = None
+        presentation_id: str,
+        slide_index: int,
+        transition_type: str = "",
+        duration: float = 0.0,
     ) -> Dict:
-        """
-        Manage slide transitions and timing.
-        
-        Args:
-            slide_index: Index of the slide (0-based)
-            operation: Operation type ("set", "remove", "get")
-            transition_type: Type of transition (basic support)
-            duration: Duration of transition in seconds
-            presentation_id: Optional presentation ID (uses current if not provided)
-            
-        Returns:
-            Dictionary with transition information
-        """
+        """Get, set, or remove slide transition information."""
         try:
-            # Get presentation
-            pres_id = presentation_id or get_current_presentation_id()
-            if pres_id not in presentations:
-                return {"error": "Presentation not found"}
-            
-            pres = presentations[pres_id]
-            
-            # Validate slide index
-            if not (0 <= slide_index < len(pres.slides)):
-                return {"error": f"Slide index {slide_index} out of range"}
-            
-            slide = pres.slides[slide_index]
-            
+            _, _, error = get_slide_and_presentation(
+                presentation_id, slide_index)
+            if error:
+                return error
+
             if operation == "get":
-                # Get current transition info (limited python-pptx support)
                 return {
                     "message": f"Transition info for slide {slide_index}",
                     "slide_index": slide_index,
                     "note": "Transition reading has limited support in python-pptx"
                 }
-            
-            elif operation == "set":
+
+            if operation == "set":
                 return {
                     "message": f"Transition setting requested for slide {slide_index}",
                     "slide_index": slide_index,
@@ -65,16 +56,15 @@ def register_transition_tools(app, presentations, get_current_presentation_id, v
                     "duration": duration,
                     "note": "Transition setting has limited support in python-pptx - this is a placeholder for future enhancement"
                 }
-            
-            elif operation == "remove":
+
+            if operation == "remove":
                 return {
                     "message": f"Transition removal requested for slide {slide_index}",
                     "slide_index": slide_index,
                     "note": "Transition removal has limited support in python-pptx - this is a placeholder for future enhancement"
                 }
-            
-            else:
-                return {"error": f"Unsupported operation: {operation}. Use 'set', 'remove', or 'get'"}
-                
+
+            return {"error": "Invalid transition operation. Use: get, set, remove"}
+
         except Exception as e:
-            return {"error": f"Failed to manage slide transitions: {str(e)}"}
+            return {"error": f"Failed to manage slide transition: {str(e)}"}

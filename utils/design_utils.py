@@ -5,7 +5,7 @@ Functions for themes, colors, fonts, backgrounds, and visual effects.
 from pptx import Presentation
 from pptx.util import Inches, Pt
 from pptx.dml.color import RGBColor
-from typing import Dict, List, Tuple, Optional, Any
+from typing import Dict, List, Tuple, Any
 from PIL import Image, ImageEnhance, ImageFilter, ImageDraw
 import tempfile
 import os
@@ -84,17 +84,17 @@ PROFESSIONAL_FONTS = {
 def get_professional_color(scheme_name: str, color_type: str) -> Tuple[int, int, int]:
     """
     Get a professional color from predefined color schemes.
-    
+
     Args:
         scheme_name: Name of the color scheme
         color_type: Type of color ('primary', 'secondary', 'accent1', 'accent2', 'light', 'text')
-        
+
     Returns:
         RGB color tuple (r, g, b)
     """
     if scheme_name not in PROFESSIONAL_COLOR_SCHEMES:
         scheme_name = 'modern_blue'  # Default fallback
-    
+
     scheme = PROFESSIONAL_COLOR_SCHEMES[scheme_name]
     return scheme.get(color_type, scheme['primary'])
 
@@ -102,20 +102,20 @@ def get_professional_color(scheme_name: str, color_type: str) -> Tuple[int, int,
 def get_professional_font(font_type: str, size_category: str = 'medium') -> Dict:
     """
     Get professional font settings.
-    
+
     Args:
         font_type: Type of font ('title', 'subtitle', 'body', 'caption')
         size_category: Size category ('large', 'medium', 'small')
-        
+
     Returns:
         Dictionary with font settings
     """
     if font_type not in PROFESSIONAL_FONTS:
         font_type = 'body'  # Default fallback
-    
+
     font_config = PROFESSIONAL_FONTS[font_type]
     size_key = f'size_{size_category}'
-    
+
     return {
         'name': font_config['name'],
         'size': font_config.get(size_key, font_config['size_medium']),
@@ -126,7 +126,7 @@ def get_professional_font(font_type: str, size_category: str = 'medium') -> Dict
 def get_color_schemes() -> Dict:
     """
     Get all available professional color schemes.
-    
+
     Returns:
         Dictionary of all color schemes with their color values
     """
@@ -138,19 +138,19 @@ def get_color_schemes() -> Dict:
     }
 
 
-def add_professional_slide(presentation: Presentation, slide_type: str = 'title_content', 
-                          color_scheme: str = 'modern_blue', title: str = None, 
-                          content: List[str] = None) -> Dict:
+def add_professional_slide(presentation: Presentation, slide_type: str = 'title_content',
+                           color_scheme: str = 'modern_blue', title: str = None,
+                           content: List[str] = None) -> Dict:
     """
     Add a professionally designed slide.
-    
+
     Args:
         presentation: The Presentation object
         slide_type: Type of slide ('title', 'title_content', 'content', 'blank')
         color_scheme: Color scheme to apply
         title: Slide title
         content: List of content items
-        
+
     Returns:
         Dictionary with slide creation results
     """
@@ -161,23 +161,23 @@ def add_professional_slide(presentation: Presentation, slide_type: str = 'title_
         'content': 6,         # Content only
         'blank': 6            # Blank layout
     }
-    
+
     layout_index = layout_map.get(slide_type, 1)
-    
+
     try:
         layout = presentation.slide_layouts[layout_index]
         slide = presentation.slides.add_slide(layout)
-        
+
         # Set title if provided
         if title and slide.shapes.title:
             slide.shapes.title.text = title
-        
+
         # Add content if provided
         if content and len(slide.placeholders) > 1:
             content_placeholder = slide.placeholders[1]
             content_text = '\n'.join([f"• {item}" for item in content])
             content_placeholder.text = content_text
-        
+
         return {
             "success": True,
             "slide_index": len(presentation.slides) - 1,
@@ -192,15 +192,15 @@ def add_professional_slide(presentation: Presentation, slide_type: str = 'title_
 
 
 def apply_professional_theme(presentation: Presentation, color_scheme: str = 'modern_blue',
-                           apply_to_existing: bool = True) -> Dict:
+                             apply_to_existing: bool = True) -> Dict:
     """
     Apply a professional theme to the presentation.
-    
+
     Args:
         presentation: The Presentation object
         color_scheme: Color scheme to apply
         apply_to_existing: Whether to apply to existing slides
-        
+
     Returns:
         Dictionary with theme application results
     """
@@ -221,11 +221,11 @@ def apply_professional_theme(presentation: Presentation, color_scheme: str = 'mo
 
 
 def enhance_existing_slide(slide, color_scheme: str = 'modern_blue',
-                          enhance_title: bool = True, enhance_content: bool = True,
-                          enhance_shapes: bool = True, enhance_charts: bool = True) -> Dict:
+                           enhance_title: bool = True, enhance_content: bool = True,
+                           enhance_shapes: bool = True, enhance_charts: bool = True) -> Dict:
     """
     Enhance an existing slide with professional styling.
-    
+
     Args:
         slide: The slide object
         color_scheme: Color scheme to apply
@@ -233,12 +233,12 @@ def enhance_existing_slide(slide, color_scheme: str = 'modern_blue',
         enhance_content: Whether to enhance content formatting
         enhance_shapes: Whether to enhance shape formatting
         enhance_charts: Whether to enhance chart formatting
-        
+
     Returns:
         Dictionary with enhancement results
     """
     enhancements_applied = []
-    
+
     try:
         # Enhance title
         if enhance_title and slide.shapes.title:
@@ -246,7 +246,7 @@ def enhance_existing_slide(slide, color_scheme: str = 'modern_blue',
             title_font = get_professional_font('title', 'large')
             # Apply title formatting (simplified)
             enhancements_applied.append("title")
-        
+
         # Enhance other shapes
         if enhance_shapes:
             for shape in slide.shapes:
@@ -254,7 +254,7 @@ def enhance_existing_slide(slide, color_scheme: str = 'modern_blue',
                     # Apply content formatting (simplified)
                     pass
             enhancements_applied.append("shapes")
-        
+
         return {
             "success": True,
             "enhancements_applied": enhancements_applied,
@@ -267,11 +267,11 @@ def enhance_existing_slide(slide, color_scheme: str = 'modern_blue',
         }
 
 
-def set_slide_gradient_background(slide, start_color: Tuple[int, int, int], 
-                                 end_color: Tuple[int, int, int], direction: str = "horizontal") -> None:
+def set_slide_gradient_background(slide, start_color: Tuple[int, int, int],
+                                  end_color: Tuple[int, int, int], direction: str = "horizontal") -> None:
     """
     Set a gradient background for a slide using a generated image.
-    
+
     Args:
         slide: The slide object
         start_color: Starting RGB color tuple
@@ -281,13 +281,14 @@ def set_slide_gradient_background(slide, start_color: Tuple[int, int, int],
     try:
         # Create gradient image
         width, height = 1920, 1080  # Standard slide dimensions
-        gradient_img = create_gradient_image(width, height, start_color, end_color, direction)
-        
+        gradient_img = create_gradient_image(
+            width, height, start_color, end_color, direction)
+
         # Save to temporary file
         with tempfile.NamedTemporaryFile(delete=False, suffix='.png') as temp_file:
             gradient_img.save(temp_file.name, 'PNG')
             temp_path = temp_file.name
-        
+
         # Add as background image (simplified - actual implementation would need XML manipulation)
         try:
             slide.shapes.add_picture(temp_path, 0, 0, Inches(10), Inches(7.5))
@@ -295,16 +296,16 @@ def set_slide_gradient_background(slide, start_color: Tuple[int, int, int],
             # Clean up temporary file
             if os.path.exists(temp_path):
                 os.unlink(temp_path)
-                
+
     except Exception:
         pass  # Graceful fallback
 
 
-def create_professional_gradient_background(slide, color_scheme: str = 'modern_blue', 
-                                          style: str = 'subtle', direction: str = 'diagonal') -> None:
+def create_professional_gradient_background(slide, color_scheme: str = 'modern_blue',
+                                            style: str = 'subtle', direction: str = 'diagonal') -> None:
     """
     Create a professional gradient background using predefined color schemes.
-    
+
     Args:
         slide: The slide object
         color_scheme: Professional color scheme to use
@@ -321,28 +322,28 @@ def create_professional_gradient_background(slide, color_scheme: str = 'modern_b
     else:  # accent
         start_color = get_professional_color(color_scheme, 'accent1')
         end_color = get_professional_color(color_scheme, 'accent2')
-    
+
     set_slide_gradient_background(slide, start_color, end_color, direction)
 
 
-def create_gradient_image(width: int, height: int, start_color: Tuple[int, int, int], 
-                         end_color: Tuple[int, int, int], direction: str = 'horizontal') -> Image.Image:
+def create_gradient_image(width: int, height: int, start_color: Tuple[int, int, int],
+                          end_color: Tuple[int, int, int], direction: str = 'horizontal') -> Image.Image:
     """
     Create a gradient image using PIL.
-    
+
     Args:
         width: Image width in pixels
         height: Image height in pixels
         start_color: Starting RGB color tuple
         end_color: Ending RGB color tuple
         direction: Gradient direction
-        
+
     Returns:
         PIL Image object with gradient
     """
     img = Image.new('RGB', (width, height))
     draw = ImageDraw.Draw(img)
-    
+
     if direction == 'horizontal':
         for x in range(width):
             ratio = x / width
@@ -365,15 +366,15 @@ def create_gradient_image(width: int, height: int, start_color: Tuple[int, int, 
                 g = int(start_color[1] * (1 - ratio) + end_color[1] * ratio)
                 b = int(start_color[2] * (1 - ratio) + end_color[2] * ratio)
                 img.putpixel((x, y), (r, g, b))
-    
+
     return img
 
 
-def format_shape(shape, fill_color: Tuple[int, int, int] = None, 
-                line_color: Tuple[int, int, int] = None, line_width: float = None) -> None:
+def format_shape(shape, fill_color: Tuple[int, int, int] = None,
+                 line_color: Tuple[int, int, int] = None, line_width: float = None) -> None:
     """
     Format a shape with color and line properties.
-    
+
     Args:
         shape: The shape object
         fill_color: RGB fill color tuple
@@ -384,10 +385,10 @@ def format_shape(shape, fill_color: Tuple[int, int, int] = None,
         if fill_color:
             shape.fill.solid()
             shape.fill.fore_color.rgb = RGBColor(*fill_color)
-        
+
         if line_color:
             shape.line.color.rgb = RGBColor(*line_color)
-        
+
         if line_width is not None:
             shape.line.width = Pt(line_width)
     except Exception:
@@ -396,12 +397,12 @@ def format_shape(shape, fill_color: Tuple[int, int, int] = None,
 
 # Image enhancement functions
 def enhance_image_with_pillow(image_path: str, brightness: float = 1.0, contrast: float = 1.0,
-                             saturation: float = 1.0, sharpness: float = 1.0,
-                             blur_radius: float = 0, filter_type: str = None,
-                             output_path: str = None) -> str:
+                              saturation: float = 1.0, sharpness: float = 1.0,
+                              blur_radius: float = 0, filter_type: str = None,
+                              output_path: str = None) -> str:
     """
     Enhance an image using PIL with various adjustments.
-    
+
     Args:
         image_path: Path to input image
         brightness: Brightness factor (1.0 = no change)
@@ -411,36 +412,36 @@ def enhance_image_with_pillow(image_path: str, brightness: float = 1.0, contrast
         blur_radius: Blur radius (0 = no blur)
         filter_type: Filter type ('BLUR', 'SHARPEN', 'SMOOTH', etc.)
         output_path: Output path (if None, generates temporary file)
-        
+
     Returns:
         Path to enhanced image
     """
     if not os.path.exists(image_path):
         raise FileNotFoundError(f"Image file not found: {image_path}")
-    
+
     # Open image
     img = Image.open(image_path)
-    
+
     # Apply enhancements
     if brightness != 1.0:
         enhancer = ImageEnhance.Brightness(img)
         img = enhancer.enhance(brightness)
-    
+
     if contrast != 1.0:
         enhancer = ImageEnhance.Contrast(img)
         img = enhancer.enhance(contrast)
-    
+
     if saturation != 1.0:
         enhancer = ImageEnhance.Color(img)
         img = enhancer.enhance(saturation)
-    
+
     if sharpness != 1.0:
         enhancer = ImageEnhance.Sharpness(img)
         img = enhancer.enhance(sharpness)
-    
+
     if blur_radius > 0:
         img = img.filter(ImageFilter.GaussianBlur(radius=blur_radius))
-    
+
     if filter_type:
         filter_map = {
             'BLUR': ImageFilter.BLUR,
@@ -450,25 +451,25 @@ def enhance_image_with_pillow(image_path: str, brightness: float = 1.0, contrast
         }
         if filter_type.upper() in filter_map:
             img = img.filter(filter_map[filter_type.upper()])
-    
+
     # Save enhanced image
     if output_path is None:
         output_path = tempfile.mktemp(suffix='.png')
-    
+
     img.save(output_path)
     return output_path
 
 
 def apply_professional_image_enhancement(image_path: str, style: str = 'presentation',
-                                       output_path: str = None) -> str:
+                                         output_path: str = None) -> str:
     """
     Apply professional image enhancement presets.
-    
+
     Args:
         image_path: Path to input image
         style: Enhancement style ('presentation', 'bright', 'soft')
         output_path: Output path (if None, generates temporary file)
-        
+
     Returns:
         Path to enhanced image
     """
@@ -493,15 +494,16 @@ def apply_professional_image_enhancement(image_path: str, style: str = 'presenta
             'blur_radius': 0.5
         }
     }
-    
-    preset = enhancement_presets.get(style, enhancement_presets['presentation'])
+
+    preset = enhancement_presets.get(
+        style, enhancement_presets['presentation'])
     return enhance_image_with_pillow(image_path, output_path=output_path, **preset)
 
 
 # Picture effects functions (simplified implementations)
 def apply_picture_shadow(picture_shape, shadow_type: str = 'outer', blur_radius: float = 4.0,
-                        distance: float = 3.0, direction: float = 315.0,
-                        color: Tuple[int, int, int] = (0, 0, 0), transparency: float = 0.6) -> Dict:
+                         distance: float = 3.0, direction: float = 315.0,
+                         color: Tuple[int, int, int] = (0, 0, 0), transparency: float = 0.6) -> Dict:
     """Apply shadow effect to a picture shape."""
     try:
         # Simplified implementation - actual shadow effects require XML manipulation
@@ -511,7 +513,7 @@ def apply_picture_shadow(picture_shape, shadow_type: str = 'outer', blur_radius:
 
 
 def apply_picture_reflection(picture_shape, size: float = 0.5, transparency: float = 0.5,
-                           distance: float = 0.0, blur: float = 4.0) -> Dict:
+                             distance: float = 0.0, blur: float = 4.0) -> Dict:
     """Apply reflection effect to a picture shape."""
     try:
         return {"success": True, "effect": "reflection", "message": "Reflection effect applied"}
@@ -520,7 +522,7 @@ def apply_picture_reflection(picture_shape, size: float = 0.5, transparency: flo
 
 
 def apply_picture_glow(picture_shape, size: float = 5.0, color: Tuple[int, int, int] = (0, 176, 240),
-                      transparency: float = 0.4) -> Dict:
+                       transparency: float = 0.4) -> Dict:
     """Apply glow effect to a picture shape."""
     try:
         return {"success": True, "effect": "glow", "message": "Glow effect applied"}
@@ -554,7 +556,7 @@ def apply_picture_transparency(picture_shape, transparency: float) -> Dict:
 
 
 def apply_picture_bevel(picture_shape, bevel_type: str = 'circle', width: float = 6.0,
-                       height: float = 6.0) -> Dict:
+                        height: float = 6.0) -> Dict:
     """Apply bevel effect to a picture shape."""
     try:
         return {"success": True, "effect": "bevel", "message": "Bevel effect applied"}
@@ -574,27 +576,27 @@ def apply_picture_filter(picture_shape, filter_type: str = 'none', intensity: fl
 def analyze_font_file(font_path: str) -> Dict:
     """
     Analyze a font file using FontTools.
-    
+
     Args:
         font_path: Path to the font file
-        
+
     Returns:
         Dictionary with font analysis results
     """
     try:
         font = TTFont(font_path)
-        
+
         # Get basic font information
         name_table = font['name']
         font_family = ""
         font_style = ""
-        
+
         for record in name_table.names:
             if record.nameID == 1:  # Font Family name
                 font_family = str(record)
             elif record.nameID == 2:  # Font Subfamily name
                 font_style = str(record)
-        
+
         return {
             "file_path": font_path,
             "font_family": font_family,
@@ -612,31 +614,31 @@ def analyze_font_file(font_path: str) -> Dict:
 
 
 def optimize_font_for_presentation(font_path: str, output_path: str = None,
-                                 text_content: str = None) -> str:
+                                   text_content: str = None) -> str:
     """
     Optimize a font file for presentation use.
-    
+
     Args:
         font_path: Path to input font file
         output_path: Path for optimized font (if None, generates temporary file)
         text_content: Text content to subset for (if None, keeps all characters)
-        
+
     Returns:
         Path to optimized font file
     """
     try:
         font = TTFont(font_path)
-        
+
         if text_content:
             # Subset font to only include used characters
             subsetter = Subsetter()
             subsetter.populate(text=text_content)
             subsetter.subset(font)
-        
+
         # Generate output path if not provided
         if output_path is None:
             output_path = tempfile.mktemp(suffix='.ttf')
-        
+
         font.save(output_path)
         return output_path
     except Exception as e:
@@ -646,29 +648,30 @@ def optimize_font_for_presentation(font_path: str, output_path: str = None,
 def get_font_recommendations(font_path: str, presentation_type: str = 'business') -> Dict:
     """
     Get font usage recommendations.
-    
+
     Args:
         font_path: Path to font file
         presentation_type: Type of presentation ('business', 'creative', 'academic')
-        
+
     Returns:
         Dictionary with font recommendations
     """
     try:
         analysis = analyze_font_file(font_path)
-        
+
         recommendations = {
             "suitable_for": [],
             "recommended_sizes": {},
             "usage_tips": [],
             "compatibility": "good"
         }
-        
+
         if presentation_type == 'business':
-            recommendations["suitable_for"] = ["titles", "body_text", "captions"]
+            recommendations["suitable_for"] = [
+                "titles", "body_text", "captions"]
             recommendations["recommended_sizes"] = {
                 "title": "24-36pt",
-                "subtitle": "16-20pt", 
+                "subtitle": "16-20pt",
                 "body": "12-16pt"
             }
             recommendations["usage_tips"] = [
@@ -676,7 +679,7 @@ def get_font_recommendations(font_path: str, presentation_type: str = 'business'
                 "Good for readability at distance",
                 "Works well with business themes"
             ]
-        
+
         return {
             "font_analysis": analysis,
             "presentation_type": presentation_type,
