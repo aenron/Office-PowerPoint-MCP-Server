@@ -7,6 +7,7 @@ import os
 import argparse
 from typing import Dict, Any
 from mcp.server.fastmcp import FastMCP
+from mcp.server.transport_security import TransportSecuritySettings
 
 # import utils  # Currently unused
 from tools import (
@@ -432,12 +433,20 @@ def get_server_info() -> Dict:
 # ---- Main Function ----
 
 
-def main(transport: str = "stdio", port: int = 8000, host: str = "127.0.0.1"):
+def main(transport: str = "stdio", port: int = 8000, host: str = "127.0.0.1", allowed_hosts: str = ""):
+    parsed_allowed_hosts = [item.strip()
+                            for item in allowed_hosts.split(",") if item.strip()]
+
     if transport == "http":
         import asyncio
         # Set the port for HTTP transport
         app.settings.host = host
         app.settings.port = port
+        if parsed_allowed_hosts:
+            app.settings.transport_security = TransportSecuritySettings(
+                enable_dns_rebinding_protection=True,
+                allowed_hosts=parsed_allowed_hosts,
+            )
         # Start the FastMCP server with HTTP transport
         try:
             app.run(transport='streamable-http')
@@ -451,6 +460,11 @@ def main(transport: str = "stdio", port: int = 8000, host: str = "127.0.0.1"):
     elif transport == "sse":
         app.settings.host = host
         app.settings.port = port
+        if parsed_allowed_hosts:
+            app.settings.transport_security = TransportSecuritySettings(
+                enable_dns_rebinding_protection=True,
+                allowed_hosts=parsed_allowed_hosts,
+            )
         # Run the FastMCP server in SSE (Server Side Events) mode
         app.run(transport='sse')
 
@@ -487,5 +501,12 @@ if __name__ == "__main__":
         default="127.0.0.1",
         help="Host to bind the MCP server to (default: 127.0.0.1)"
     )
+
+    parser.add_argument(
+        "--allowed-hosts",
+        type=str,
+        default="",
+        help="Comma-separated Host header allowlist, e.g. '59.110.150.224:7380,example.com:7380'"
+    )
     args = parser.parse_args()
-    main(args.transport, args.port, args.host)
+    main(args.transport, args.port, args.host, args.allowed_hosts)
