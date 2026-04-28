@@ -1798,7 +1798,7 @@ def register_workflow_tools(
         presentation_id: str,
         title: str,
         subtitle: str = "",
-        slides: Optional[List[Dict[str, Any]]] = None,
+        slides: List[Dict[str, Any]] = [],
         theme: str = "business_blue",
         density: str = "standard",
         overflow: str = "shrink_then_truncate",
@@ -2468,7 +2468,7 @@ def register_workflow_tools(
         presentation_id: str,
         file_name: str = "",
         output_directory: str = "",
-        template_export: Optional[Dict[str, Any]] = None,
+        template_export: Dict[str, Any] = {},
     ) -> Dict[str, Any]:
         """Save and export a presentation built through the simplified workflow."""
         if presentation_id not in presentations:
