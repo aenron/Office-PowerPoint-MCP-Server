@@ -282,6 +282,101 @@ def register_workflow_tools(
         )
         add_rect(slide, 0.72, 1.28, 1.1, 0.04, theme_color(theme, "accent"))
 
+    def apply_page_size(presentation, page_size: str) -> str:
+        presentation.slide_width = Inches(13.333)
+        presentation.slide_height = Inches(7.5)
+        return "wide_16_9"
+
+    def is_cover_spec(slide_spec: Dict[str, Any]) -> bool:
+        return infer_slide_type(slide_spec) == "cover"
+
+    def is_closing_spec(slide_spec: Dict[str, Any]) -> bool:
+        return infer_slide_type(slide_spec) == "closing"
+
+    def prepare_slide_specs(
+        slides: List[Dict[str, Any]],
+        title: str,
+        subtitle: str,
+        auto_cover: bool,
+        auto_closing: bool,
+        style: str,
+    ) -> List[Dict[str, Any]]:
+        prepared = list(slides or [])
+        if not prepared:
+            prepared = [
+                {
+                    "type": "summary",
+                    "title": title,
+                    "statement": subtitle,
+                    "sections": [{"title": "核心观点", "points": safe_lines(subtitle, 3)}],
+                }
+            ]
+        if auto_cover and (not prepared or not is_cover_spec(prepared[0] if isinstance(prepared[0], dict) else {})):
+            prepared.insert(0, {
+                "type": "cover",
+                "title": title,
+                "subtitle": subtitle,
+                "tag": style.upper() if style else "PPT",
+            })
+        if auto_closing and (not prepared or not is_closing_spec(prepared[-1] if isinstance(prepared[-1], dict) else {})):
+            prepared.append({
+                "type": "closing",
+                "title": "谢谢",
+                "subtitle": title,
+            })
+        return prepared
+
+    def add_deck_footer(
+        presentation,
+        theme: Dict[str, Any],
+        footer_text: str,
+        show_footer: bool,
+        show_page_number: bool,
+        visual_level: str,
+    ) -> None:
+        if not show_footer and not show_page_number and visual_level == "clean":
+            return
+        total = len(presentation.slides)
+        for index, slide in enumerate(presentation.slides, start=1):
+            if visual_level in {"rich", "dense"}:
+                add_rect(slide, 0.68, 7.08, 0.7, 0.04, theme_color(theme, "accent"))
+                if visual_level == "rich":
+                    add_rect(slide, 11.78, 0.48, 0.28, 0.28, theme_color(theme, "light"), radius=True)
+                    add_rect(slide, 12.14, 0.48, 0.18, 0.18, theme_color(theme, "accent"), radius=True)
+            if show_footer and footer_text:
+                add_text(slide, 0.72, 7.0, 6.5, 0.22, footer_text, theme, 7, "muted")
+            if show_page_number:
+                add_text(slide, 11.75, 7.0, 0.85, 0.22, f"{index:02d}/{total:02d}", theme, 7, "muted", alignment="right")
+
+    def inspect_presentation_quality(presentation, warnings: List[str]) -> Dict[str, Any]:
+        min_font_size: Optional[float] = None
+        text_shape_count = 0
+        empty_slide_count = 0
+        for slide in presentation.slides:
+            slide_has_text = False
+            for shape in slide.shapes:
+                if not hasattr(shape, "text_frame") or not shape.text_frame:
+                    continue
+                if shape.text.strip():
+                    text_shape_count += 1
+                    slide_has_text = True
+                for paragraph in shape.text_frame.paragraphs:
+                    for run in paragraph.runs:
+                        if run.font.size:
+                            size = float(run.font.size.pt)
+                            min_font_size = size if min_font_size is None else min(min_font_size, size)
+            if not slide_has_text:
+                empty_slide_count += 1
+
+        return {
+            "warning_count": len(warnings),
+            "truncated_count": sum(1 for item in warnings if "truncated" in item),
+            "limited_item_count": sum(1 for item in warnings if "limited to" in item),
+            "empty_slide_count": empty_slide_count,
+            "text_shape_count": text_shape_count,
+            "min_font_size": min_font_size,
+        }
+
     def add_card(
         slide,
         left: float,
@@ -1802,6 +1897,15 @@ def register_workflow_tools(
         theme: str = "business_blue",
         density: str = "standard",
         overflow: str = "shrink_then_truncate",
+        style: str = "business",
+        visual_level: str = "clean",
+        language: str = "zh-CN",
+        page_size: str = "wide_16_9",
+        auto_cover: bool = True,
+        auto_closing: bool = False,
+        show_page_number: bool = True,
+        show_footer: bool = True,
+        footer_text: str = "",
         output_name: str = "",
     ) -> Dict[str, Any]:
         """Generate a complete PPT directly with python-pptx, without using a template.
@@ -1816,26 +1920,24 @@ def register_workflow_tools(
 
         effective_theme_id, theme_spec = get_theme(theme)
         presentation = ppt_utils.create_presentation()
-        presentation.slide_width = Inches(13.333)
-        presentation.slide_height = Inches(7.5)
+        effective_page_size = apply_page_size(presentation, page_size)
 
         if hasattr(ppt_utils, "set_core_properties"):
             ppt_utils.set_core_properties(presentation, title=title)
 
-        slide_specs = slides or [
-            {
-                "type": "cover",
-                "title": title,
-                "subtitle": subtitle,
-            },
-            {
-                "type": "summary",
-                "title": title,
-                "sections": [
-                    {"title": "核心观点", "points": safe_lines(subtitle, 3)},
-                ],
-            },
-        ]
+        normalized_style = (style or "business").strip().lower()
+        normalized_visual_level = (visual_level or "clean").strip().lower()
+        if normalized_visual_level not in {"clean", "rich", "dense"}:
+            normalized_visual_level = "clean"
+
+        slide_specs = prepare_slide_specs(
+            slides,
+            title,
+            subtitle,
+            auto_cover,
+            auto_closing,
+            normalized_style,
+        )
 
         rendered_slide_types = []
         warnings: List[str] = []
@@ -1859,6 +1961,17 @@ def register_workflow_tools(
                 )
             )
 
+        effective_footer_text = footer_text or title
+        add_deck_footer(
+            presentation,
+            theme_spec,
+            effective_footer_text,
+            show_footer,
+            show_page_number,
+            normalized_visual_level,
+        )
+        quality = inspect_presentation_quality(presentation, warnings)
+
         presentations[presentation_id] = presentation
         projects[presentation_id] = {
             "title": title,
@@ -1868,6 +1981,10 @@ def register_workflow_tools(
             "theme": effective_theme_id,
             "density": density,
             "overflow": overflow,
+            "style": normalized_style,
+            "visual_level": normalized_visual_level,
+            "language": language,
+            "page_size": effective_page_size,
         }
         set_current_presentation_id(presentation_id)
 
@@ -1876,8 +1993,12 @@ def register_workflow_tools(
             "title": title,
             "slide_count": len(presentation.slides),
             "theme": effective_theme_id,
+            "style": normalized_style,
+            "visual_level": normalized_visual_level,
+            "page_size": effective_page_size,
             "rendered_slide_types": rendered_slide_types,
             "warnings": warnings,
+            "quality": quality,
             "next_step": "Call export_presentation with this presentation_id to save and get a download_url.",
         }
 

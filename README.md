@@ -167,6 +167,19 @@ types when `type` is omitted:
 Use `density` (`spacious`, `standard`, `compact`) and `overflow`
 (`shrink_then_truncate`, `warn`) to control content capacity and font fitting.
 
+`generate_presentation` also supports deck-level design controls:
+
+- `style`: `business`, `consulting`, `technical`, `executive`
+- `visual_level`: `clean`, `rich`, `dense`
+- `page_size`: currently rendered as stable `wide_16_9`
+- `auto_cover`: automatically prepend a cover slide
+- `auto_closing`: automatically append a closing slide
+- `show_page_number`: add page numbers
+- `show_footer` and `footer_text`: add a consistent footer
+
+The generation response includes `quality` with warning counts, truncation
+counts, empty-slide count, text-shape count, and minimum rendered font size.
+
 To enable template profile tools (`list_templates`, `analyze_template`,
 `create_template_profile`, and `generate_from_template_profile`), set:
 
