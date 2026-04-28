@@ -2,7 +2,7 @@
 [![smithery badge](https://smithery.ai/badge/@GongRzhe/Office-PowerPoint-MCP-Server)](https://smithery.ai/server/@GongRzhe/Office-PowerPoint-MCP-Server)
 ![](https://badge.mcpx.dev?type=server 'MCP Server')
 
-A comprehensive MCP (Model Context Protocol) server for PowerPoint manipulation using python-pptx. **Version 2.0** provides 32 powerful tools organized into 11 specialized modules, offering complete PowerPoint creation, management, and professional design capabilities. The server features a modular architecture with enhanced parameter handling, intelligent operation selection, and comprehensive error handling.
+A comprehensive MCP (Model Context Protocol) server for PowerPoint manipulation using python-pptx. The current default mode exposes **3 direct generation tools** for stable PPT creation without templates, while optional template-profile and advanced modes re-enable template filling and the legacy low-level editing surface.
 
 ----
 
@@ -139,6 +139,70 @@ Run the stdio server:
 
 ```bash
 python ppt_mcp_server.py
+```
+
+### Tool Exposure Modes
+
+By default, the server exposes only the direct generation tools:
+
+- `list_themes`
+- `generate_presentation`
+- `export_presentation`
+
+This mode does not depend on a PPT template. It creates slides directly with
+`python-pptx`, so content placement and font sizes are controlled by the tool
+instead of inferred from template placeholders.
+
+`generate_presentation` supports a general content model and can infer slide
+types when `type` is omitted:
+
+- `items` / `sections` -> `cards`
+- `left` + `right` or `comparisons` -> `comparison`
+- `steps` -> `process` or `timeline`
+- `metrics` -> `metrics`
+- `layers` -> `architecture`
+- `table` -> `table`
+- `statement` -> `quote`
+
+Use `density` (`spacious`, `standard`, `compact`) and `overflow`
+(`shrink_then_truncate`, `warn`) to control content capacity and font fitting.
+
+To enable template profile tools (`list_templates`, `analyze_template`,
+`create_template_profile`, and `generate_from_template_profile`), set:
+
+```bash
+export PPT_ENABLE_TEMPLATE_PROFILE_TOOLS=true
+```
+
+On Windows:
+
+```bash
+set PPT_ENABLE_TEMPLATE_PROFILE_TOOLS=true
+```
+
+To re-enable the legacy high-level workflow tools (`create_presentation_project`,
+`plan_presentation`, `build_presentation`, and `revise_presentation`), set:
+
+```bash
+export PPT_ENABLE_LEGACY_WORKFLOW_TOOLS=true
+```
+
+On Windows:
+
+```bash
+set PPT_ENABLE_LEGACY_WORKFLOW_TOOLS=true
+```
+
+To enable the legacy advanced tool surface as well, set:
+
+```bash
+export PPT_ENABLE_ADVANCED_TOOLS=true
+```
+
+On Windows:
+
+```bash
+set PPT_ENABLE_ADVANCED_TOOLS=true
 ```
 
 ### Starting the Streamable-Http Server

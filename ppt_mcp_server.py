@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 MCP Server for PowerPoint manipulation using python-pptx.
-Consolidated version with 20 tools organized into multiple modules.
+Consolidated server with low-level and simplified workflow tools.
 """
 import os
 import argparse
@@ -20,7 +20,8 @@ from tools import (
     register_chart_tools,
     register_connector_tools,
     register_master_tools,
-    register_transition_tools
+    register_transition_tools,
+    register_workflow_tools,
 )
 
 # Initialize the FastMCP server
@@ -30,7 +31,9 @@ app = FastMCP(
 
 # Global state to store presentations in memory
 presentations = {}
+projects = {}
 current_presentation_id = None
+advanced_tools_enabled = False
 
 # Template configuration
 
@@ -71,6 +74,11 @@ def get_template_search_directories():
     # Default search directories when no environment variable or invalid paths
     return default_template_directories
 
+
+def is_truthy_env(value: str) -> bool:
+    """Interpret common truthy environment variable values."""
+    return (value or "").strip().lower() in {"1", "true", "yes", "on"}
+
 # ---- Helper Functions ----
 
 
@@ -91,6 +99,12 @@ def set_current_presentation_id(pres_id):
     """Set the current presentation ID."""
     global current_presentation_id
     current_presentation_id = pres_id
+
+
+def set_advanced_tools_enabled(enabled: bool):
+    """Store whether low-level tools are exposed."""
+    global advanced_tools_enabled
+    advanced_tools_enabled = enabled
 
 
 def validate_parameters(params):
@@ -251,184 +265,185 @@ def open_presentation_wrapper(original_func):
     return wrapper
 
 
-# Register all tool modules
-register_presentation_tools(
+register_workflow_tools(
     app,
     presentations,
+    projects,
     get_current_presentation_id,
-    get_template_search_directories
-)
-
-register_content_tools(
-    app,
-    presentations,
-    get_current_presentation_id,
-    validate_parameters,
-    is_positive,
-    is_non_negative,
-    is_in_range,
-    is_valid_rgb
-)
-
-register_structural_tools(
-    app,
-    presentations,
-    get_current_presentation_id,
-    validate_parameters,
-    is_positive,
-    is_non_negative,
-    is_in_range,
-    is_valid_rgb,
-    add_shape_direct
-)
-
-register_professional_tools(
-    app,
-    presentations,
-    get_current_presentation_id
-)
-
-register_template_tools(
-    app,
-    presentations,
-    get_current_presentation_id
-)
-
-register_hyperlink_tools(
-    app,
-    presentations,
-    get_current_presentation_id,
-    validate_parameters,
-    is_positive,
-    is_non_negative,
-    is_in_range,
-    is_valid_rgb
-)
-
-register_chart_tools(
-    app,
-    presentations,
-    get_current_presentation_id,
-    validate_parameters,
-    is_positive,
-    is_non_negative,
-    is_in_range,
-    is_valid_rgb
+    set_current_presentation_id,
+    get_template_search_directories,
 )
 
 
-register_connector_tools(
-    app,
-    presentations,
-    get_current_presentation_id,
-    validate_parameters,
-    is_positive,
-    is_non_negative,
-    is_in_range,
-    is_valid_rgb
-)
+def register_advanced_tools():
+    """Register low-level and compatibility tools for advanced mode."""
+    register_presentation_tools(
+        app,
+        presentations,
+        get_current_presentation_id,
+        get_template_search_directories
+    )
 
-register_master_tools(
-    app,
-    presentations,
-    get_current_presentation_id,
-    validate_parameters,
-    is_positive,
-    is_non_negative,
-    is_in_range,
-    is_valid_rgb
-)
+    register_content_tools(
+        app,
+        presentations,
+        get_current_presentation_id,
+        validate_parameters,
+        is_positive,
+        is_non_negative,
+        is_in_range,
+        is_valid_rgb
+    )
 
-register_transition_tools(
-    app,
-    presentations,
-    get_current_presentation_id,
-    validate_parameters,
-    is_positive,
-    is_non_negative,
-    is_in_range,
-    is_valid_rgb
-)
+    register_structural_tools(
+        app,
+        presentations,
+        get_current_presentation_id,
+        validate_parameters,
+        is_positive,
+        is_non_negative,
+        is_in_range,
+        is_valid_rgb,
+        add_shape_direct
+    )
+
+    register_professional_tools(
+        app,
+        presentations,
+        get_current_presentation_id
+    )
+
+    register_template_tools(
+        app,
+        presentations,
+        get_current_presentation_id
+    )
+
+    register_hyperlink_tools(
+        app,
+        presentations,
+        get_current_presentation_id,
+        validate_parameters,
+        is_positive,
+        is_non_negative,
+        is_in_range,
+        is_valid_rgb
+    )
+
+    register_chart_tools(
+        app,
+        presentations,
+        get_current_presentation_id,
+        validate_parameters,
+        is_positive,
+        is_non_negative,
+        is_in_range,
+        is_valid_rgb
+    )
+
+    register_connector_tools(
+        app,
+        presentations,
+        get_current_presentation_id,
+        validate_parameters,
+        is_positive,
+        is_non_negative,
+        is_in_range,
+        is_valid_rgb
+    )
+
+    register_master_tools(
+        app,
+        presentations,
+        get_current_presentation_id,
+        validate_parameters,
+        is_positive,
+        is_non_negative,
+        is_in_range,
+        is_valid_rgb
+    )
+
+    register_transition_tools(
+        app,
+        presentations,
+        get_current_presentation_id,
+        validate_parameters,
+        is_positive,
+        is_non_negative,
+        is_in_range,
+        is_valid_rgb
+    )
+
+    register_advanced_utility_tools()
 
 
-# ---- Additional Utility Tools ----
+def register_advanced_utility_tools():
+    """Register compatibility and diagnostic tools for advanced mode."""
 
-@app.tool()
-def list_presentations() -> Dict:
-    """List all loaded presentations."""
-    return {
-        "presentations": [
-            {
-                "id": pres_id,
-                "slide_count": len(pres.slides),
-                "is_current": pres_id == current_presentation_id
-            }
-            for pres_id, pres in presentations.items()
-        ],
-        "current_presentation_id": current_presentation_id,
-        "total_presentations": len(presentations)
-    }
-
-
-@app.tool()
-def switch_presentation(presentation_id: str) -> Dict:
-    """Switch to a different loaded presentation."""
-    if presentation_id not in presentations:
+    @app.tool()
+    def list_presentations() -> Dict:
+        """List all loaded presentations."""
         return {
-            "error": f"Presentation '{presentation_id}' not found. Available presentations: {list(presentations.keys())}"
+            "presentations": [
+                {
+                    "id": pres_id,
+                    "slide_count": len(pres.slides),
+                    "is_current": pres_id == current_presentation_id
+                }
+                for pres_id, pres in presentations.items()
+            ],
+            "current_presentation_id": current_presentation_id,
+            "total_presentations": len(presentations)
         }
 
-    global current_presentation_id
-    old_id = current_presentation_id
-    current_presentation_id = presentation_id
 
-    return {
-        "message": f"Switched from presentation '{old_id}' to '{presentation_id}'",
-        "previous_presentation_id": old_id,
-        "current_presentation_id": current_presentation_id
-    }
+    @app.tool()
+    def switch_presentation(presentation_id: str) -> Dict:
+        """Switch to a different loaded presentation."""
+        if presentation_id not in presentations:
+            return {
+                "error": f"Presentation '{presentation_id}' not found. Available presentations: {list(presentations.keys())}"
+            }
+
+        global current_presentation_id
+        old_id = current_presentation_id
+        current_presentation_id = presentation_id
+
+        return {
+            "message": f"Switched from presentation '{old_id}' to '{presentation_id}'",
+            "previous_presentation_id": old_id,
+            "current_presentation_id": current_presentation_id
+        }
 
 
-@app.tool()
-def get_server_info() -> Dict:
-    """Get information about the MCP server."""
-    return {
-        "name": "PowerPoint MCP Server - Enhanced Edition",
-        "version": "2.1.0",
-        "total_tools": 32,  # Organized into 11 specialized modules
-        "loaded_presentations": len(presentations),
-        "current_presentation": current_presentation_id,
-        "features": [
-            "Presentation Management (7 tools)",
-            "Content Management (6 tools)",
-            "Template Operations (7 tools)",
-            "Structural Elements (4 tools)",
-            "Professional Design (3 tools)",
-            "Specialized Features (5 tools)"
-        ],
-        "improvements": [
-            "32 specialized tools organized into 11 focused modules",
-            "68+ utility functions across 7 organized utility modules",
-            "Enhanced parameter handling and validation",
-            "Unified operation interfaces with comprehensive coverage",
-            "Advanced template system with auto-generation capabilities",
-            "Professional design tools with multiple effects and styling",
-            "Specialized features including hyperlinks, connectors, slide masters",
-            "Dynamic text sizing and intelligent wrapping",
-            "Advanced visual effects and styling",
-            "Content-aware optimization and validation",
-            "Complete PowerPoint lifecycle management",
-            "Modular architecture for better maintainability"
-        ],
-        "new_enhanced_features": [
-            "Hyperlink Management - Add, update, remove, and list hyperlinks in text",
-            "Advanced Chart Data Updates - Replace chart data with new categories and series",
-            "Advanced Text Run Formatting - Apply formatting to specific text runs",
-            "Shape Connectors - Add connector lines and arrows between points",
-            "Slide Master Management - Access and manage slide masters and layouts",
-            "Slide Transitions - Basic transition management (placeholder for future)"
-        ]
-    }
+    @app.tool()
+    def get_server_info() -> Dict:
+        """Get information about the MCP server."""
+        total_tools = len(getattr(app._tool_manager, "_tools", {}))
+        return {
+            "name": "PowerPoint MCP Server - Enhanced Edition",
+            "version": "2.1.0",
+            "total_tools": total_tools,
+            "loaded_presentations": len(presentations),
+            "current_presentation": current_presentation_id,
+            "active_projects": len(projects),
+            "advanced_tools_enabled": advanced_tools_enabled,
+            "features": [
+                "Simplified Workflow (6 tools)",
+                "Optional advanced editing surface for low-level operations",
+            ],
+            "improvements": [
+                f"{total_tools} registered tools in the current exposure mode",
+                "Default simplified MCP interface focused on end-to-end PPT generation",
+                "Optional advanced mode for detailed editing, diagnostics, and compatibility",
+                "Template-aware project, planning, build, revise, and export workflow",
+            ],
+        }
+
+
+if is_truthy_env(os.environ.get("PPT_ENABLE_ADVANCED_TOOLS")):
+    set_advanced_tools_enabled(True)
+    register_advanced_tools()
 
 # ---- Main Function ----
 
