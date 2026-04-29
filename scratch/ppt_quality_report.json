@@ -1,0 +1,14 @@
+{
+  "workspace": "D:\\UGit\\Office-PowerPoint-MCP-Server",
+  "pptx": "D:\\UGit\\Office-PowerPoint-MCP-Server\\ppt\\西北人口老龄化研究_孙平军.pptx",
+  "checks": {
+    "output_hygiene": {
+      "output_dir": "D:\\UGit\\Office-PowerPoint-MCP-Server\\output",
+      "unexpected_files": []
+    }
+  },
+  "failures": [
+    "PPTX package inspection failed: unzip -Z1 D:\\UGit\\Office-PowerPoint-MCP-Server\\ppt\\西北人口老龄化研究_孙平军.pptx failed"
+  ],
+  "warnings": []
+}

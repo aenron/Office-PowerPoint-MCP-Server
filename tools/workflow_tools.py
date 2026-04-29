@@ -41,7 +41,8 @@ def register_workflow_tools(
         return re.sub(r"[\s_\-]+", "", (value or "").strip().lower())
 
     def slugify(value: str) -> str:
-        cleaned = re.sub(r"[^A-Za-z0-9\u4e00-\u9fff]+", "-", (value or "").strip())
+        cleaned = re.sub(r"[^A-Za-z0-9\u4e00-\u9fff]+",
+                         "-", (value or "").strip())
         cleaned = cleaned.strip("-")
         return cleaned or "presentation"
 
@@ -322,7 +323,8 @@ def register_workflow_tools(
         value = str(text or "").strip()
         capacity = text_capacity(width, height, base_size, density)
         size = fit_text_size(value, base_size, min_size, capacity)
-        effective_overflow = (overflow or "shrink_then_truncate").strip().lower()
+        effective_overflow = (
+            overflow or "shrink_then_truncate").strip().lower()
 
         if len(value) <= capacity:
             return value, size
@@ -332,9 +334,11 @@ def register_workflow_tools(
             if len(value) > max_chars:
                 value = value[: max_chars - 1].rstrip() + "..."
                 if warnings is not None:
-                    warnings.append(f"{context} truncated from {len(str(text or ''))} to {len(value)} characters.")
+                    warnings.append(
+                        f"{context} truncated from {len(str(text or ''))} to {len(value)} characters.")
         elif "warn" in effective_overflow and warnings is not None:
-            warnings.append(f"{context} may overflow: {len(value)} characters for estimated capacity {capacity}.")
+            warnings.append(
+                f"{context} may overflow: {len(value)} characters for estimated capacity {capacity}.")
 
         return value, size
 
@@ -347,8 +351,10 @@ def register_workflow_tools(
             lines = []
             for item in values:
                 if isinstance(item, dict):
-                    text = item.get("text") or item.get("title") or item.get("label") or item.get("name") or ""
-                    detail = item.get("detail") or item.get("description") or item.get("content") or ""
+                    text = item.get("text") or item.get("title") or item.get(
+                        "label") or item.get("name") or ""
+                    detail = item.get("detail") or item.get(
+                        "description") or item.get("content") or ""
                     lines.append(f"{text}: {detail}" if detail else str(text))
                 else:
                     lines.append(str(item))
@@ -364,9 +370,49 @@ def register_workflow_tools(
             return text, ""
         return match.group(1).strip(), match.group(2).strip()
 
+    def source_refs_to_note(value: Any) -> str:
+        if not value:
+            return ""
+        if isinstance(value, str):
+            return value.strip()
+        if isinstance(value, dict):
+            parts = [
+                str(value.get(key)).strip()
+                for key in ["file", "section", "chapter", "page", "table", "paragraph", "quote"]
+                if value.get(key)
+            ]
+            return " / ".join(parts)
+        if isinstance(value, list):
+            notes = [source_refs_to_note(item) for item in value[:3]]
+            return "；".join([item for item in notes if item])
+        return str(value).strip()
+
+    def get_source_note(item: Dict[str, Any]) -> str:
+        note = (
+            item.get("source_note")
+            or item.get("source")
+            or item.get("source_text")
+            or item.get("citation")
+            or item.get("reference")
+            or source_refs_to_note(item.get("source_refs"))
+        )
+        return str(note or "").strip()
+
+    def merge_point_lines(item: Dict[str, Any], fallback: Any = "") -> List[str]:
+        lines: List[str] = []
+        for key in ["points", "bullets", "content", "details", "evidence", "explanation", "analysis", "result", "conclusion", "mechanism", "boundary"]:
+            for line in safe_lines(item.get(key), 6):
+                if line and line not in lines:
+                    lines.append(line)
+        for line in safe_lines(fallback, 6):
+            if line and line not in lines:
+                lines.append(line)
+        return lines
+
     def trim_items(items: List[Any], limit: int, warnings: Optional[List[str]], context: str) -> List[Any]:
         if len(items) > limit and warnings is not None:
-            warnings.append(f"{context} limited to {limit} items; {len(items) - limit} extra items were not rendered.")
+            warnings.append(
+                f"{context} limited to {limit} items; {len(items) - limit} extra items were not rendered.")
         return items[:limit]
 
     def add_text(
@@ -430,7 +476,8 @@ def register_workflow_tools(
         radius: bool = False,
     ):
         shape_type = MSO_SHAPE.ROUNDED_RECTANGLE if radius else MSO_SHAPE.RECTANGLE
-        shape = slide.shapes.add_shape(shape_type, Inches(left), Inches(top), Inches(width), Inches(height))
+        shape = slide.shapes.add_shape(shape_type, Inches(
+            left), Inches(top), Inches(width), Inches(height))
         shape.fill.solid()
         shape.fill.fore_color.rgb = rgb(fill)
         if line:
@@ -448,7 +495,8 @@ def register_workflow_tools(
     def add_slide_header(slide, title: str, theme: Dict[str, Any], kicker: str = "") -> None:
         add_theme_background(slide, theme)
         if kicker:
-            add_text(slide, 0.7, 0.35, 3.4, 0.28, kicker, theme, 8, "accent", True)
+            add_text(slide, 0.7, 0.35, 3.4, 0.28,
+                     kicker, theme, 8, "accent", True)
         add_text(
             slide,
             0.7,
@@ -462,6 +510,28 @@ def register_workflow_tools(
             True,
         )
         add_rect(slide, 0.72, 1.28, 1.1, 0.04, theme_color(theme, "accent"))
+
+    def add_source_note(slide, slide_spec: Dict[str, Any], theme: Dict[str, Any], warnings: Optional[List[str]] = None) -> None:
+        note = get_source_note(slide_spec)
+        if not note:
+            return
+        label = note if note.startswith("来源") else f"来源：{note}"
+        add_text(
+            slide,
+            0.72,
+            6.72,
+            9.8,
+            0.22,
+            label,
+            theme,
+            6,
+            "muted",
+            density="compact",
+            overflow="shrink_then_truncate",
+            min_font_size=6,
+            warnings=warnings,
+            context="source note",
+        )
 
     def apply_page_size(presentation, page_size: str) -> str:
         presentation.slide_width = Inches(13.333)
@@ -507,6 +577,145 @@ def register_workflow_tools(
             })
         return prepared
 
+    def chunk_items(items: List[Any], size: int) -> List[List[Any]]:
+        if size <= 0:
+            return [items]
+        return [items[index:index + size] for index in range(0, len(items), size)] or [[]]
+
+    def part_title(title: str, index: int, total: int) -> str:
+        if total <= 1:
+            return title
+        return f"{title}（{index}/{total}）"
+
+    def clone_slide_part(slide_spec: Dict[str, Any], index: int, total: int) -> Dict[str, Any]:
+        part = dict(slide_spec)
+        part["title"] = part_title(str(slide_spec.get("title") or "内容"), index, total)
+        return part
+
+    def split_table_slide(slide_spec: Dict[str, Any]) -> List[Dict[str, Any]]:
+        table_spec = slide_spec.get("table") or {}
+        rows = table_spec.get("rows") or []
+        if not isinstance(rows, list) or len(rows) <= 6:
+            return [slide_spec]
+
+        row_chunks = chunk_items(rows, 6)
+        slides_out: List[Dict[str, Any]] = []
+        for index, row_chunk in enumerate(row_chunks, start=1):
+            part = clone_slide_part(slide_spec, index, len(row_chunks))
+            part_table = dict(table_spec)
+            part_table["rows"] = row_chunk
+            part["table"] = part_table
+            slides_out.append(part)
+        return slides_out
+
+    def split_list_slide(slide_spec: Dict[str, Any], field_name: str, limit: int) -> List[Dict[str, Any]]:
+        values = slide_spec.get(field_name) or []
+        if not isinstance(values, list) or len(values) <= limit:
+            return [slide_spec]
+
+        value_chunks = chunk_items(values, limit)
+        slides_out: List[Dict[str, Any]] = []
+        for index, value_chunk in enumerate(value_chunks, start=1):
+            part = clone_slide_part(slide_spec, index, len(value_chunks))
+            part[field_name] = value_chunk
+            slides_out.append(part)
+        return slides_out
+
+    def expand_finding_items(findings: List[Any]) -> List[Any]:
+        expanded: List[Any] = []
+        for finding in findings:
+            if not isinstance(finding, dict):
+                expanded.append(finding)
+                continue
+            points = merge_point_lines(finding)
+            if len(points) <= 3:
+                expanded.append(finding)
+                continue
+            point_chunks = chunk_items(points, 3)
+            for index, point_chunk in enumerate(point_chunks, start=1):
+                part = dict(finding)
+                part["points"] = point_chunk
+                if index > 1:
+                    part["title"] = f"{finding.get('title') or finding.get('headline') or '发现'}（续）"
+                expanded.append(part)
+        return expanded
+
+    def split_findings_slide(slide_spec: Dict[str, Any]) -> List[Dict[str, Any]]:
+        findings = slide_spec.get("findings") or slide_spec.get("items") or slide_spec.get("sections") or []
+        if not isinstance(findings, list):
+            return [slide_spec]
+
+        expanded = expand_finding_items(findings)
+        if len(expanded) <= 4:
+            part = dict(slide_spec)
+            if slide_spec.get("findings") is not None:
+                part["findings"] = expanded
+            elif slide_spec.get("sections") is not None:
+                part["sections"] = expanded
+            else:
+                part["items"] = expanded
+            return [part]
+
+        finding_chunks = chunk_items(expanded, 4)
+        slides_out: List[Dict[str, Any]] = []
+        for index, finding_chunk in enumerate(finding_chunks, start=1):
+            part = clone_slide_part(slide_spec, index, len(finding_chunks))
+            if slide_spec.get("findings") is not None:
+                part["findings"] = finding_chunk
+            elif slide_spec.get("sections") is not None:
+                part["sections"] = finding_chunk
+            else:
+                part["items"] = finding_chunk
+            slides_out.append(part)
+        return slides_out
+
+    def split_contribution_limitations_slide(slide_spec: Dict[str, Any]) -> List[Dict[str, Any]]:
+        field_names = ["contributions", "limitations", "implications", "future", "outlook"]
+        chunks_by_field: Dict[str, List[List[Any]]] = {}
+        max_parts = 1
+        for field_name in field_names:
+            values = safe_lines(slide_spec.get(field_name), 12)
+            if not values:
+                continue
+            chunks = chunk_items(values, 3)
+            chunks_by_field[field_name] = chunks
+            max_parts = max(max_parts, len(chunks))
+        if max_parts <= 1:
+            return [slide_spec]
+
+        slides_out: List[Dict[str, Any]] = []
+        for index in range(max_parts):
+            part = clone_slide_part(slide_spec, index + 1, max_parts)
+            for field_name, chunks in chunks_by_field.items():
+                part[field_name] = chunks[index] if index < len(chunks) else []
+            slides_out.append(part)
+        return slides_out
+
+    def expand_capacity_slide_specs(slide_specs: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        expanded: List[Dict[str, Any]] = []
+        for slide_spec in slide_specs:
+            if not isinstance(slide_spec, dict):
+                expanded.append(slide_spec)
+                continue
+
+            slide_type = infer_slide_type(slide_spec)
+            split_specs = [slide_spec]
+            if slide_type == "table":
+                split_specs = split_table_slide(slide_spec)
+            elif slide_type == "literature_matrix":
+                field_name = "literature" if slide_spec.get("literature") is not None else ("studies" if slide_spec.get("studies") is not None else "items")
+                split_specs = split_list_slide(slide_spec, field_name, 6)
+            elif slide_type in {"cards", "section"}:
+                field_name = "sections" if slide_spec.get("sections") is not None else "items"
+                split_specs = split_list_slide(slide_spec, field_name, 6)
+            elif slide_type == "findings":
+                split_specs = split_findings_slide(slide_spec)
+            elif slide_type == "contribution_limitations":
+                split_specs = split_contribution_limitations_slide(slide_spec)
+
+            expanded.extend(split_specs)
+        return expanded
+
     def add_deck_footer(
         presentation,
         theme: Dict[str, Any],
@@ -520,14 +729,19 @@ def register_workflow_tools(
         total = len(presentation.slides)
         for index, slide in enumerate(presentation.slides, start=1):
             if visual_level in {"rich", "dense"}:
-                add_rect(slide, 0.68, 7.08, 0.7, 0.04, theme_color(theme, "accent"))
+                add_rect(slide, 0.68, 7.08, 0.7, 0.04,
+                         theme_color(theme, "accent"))
                 if visual_level == "rich":
-                    add_rect(slide, 11.78, 0.48, 0.28, 0.28, theme_color(theme, "light"), radius=True)
-                    add_rect(slide, 12.14, 0.48, 0.18, 0.18, theme_color(theme, "accent"), radius=True)
+                    add_rect(slide, 11.78, 0.48, 0.28, 0.28,
+                             theme_color(theme, "light"), radius=True)
+                    add_rect(slide, 12.14, 0.48, 0.18, 0.18,
+                             theme_color(theme, "accent"), radius=True)
             if show_footer and footer_text:
-                add_text(slide, 0.72, 7.0, 6.5, 0.22, footer_text, theme, 7, "muted")
+                add_text(slide, 0.72, 7.0, 6.5, 0.22,
+                         footer_text, theme, 7, "muted")
             if show_page_number:
-                add_text(slide, 11.75, 7.0, 0.85, 0.22, f"{index:02d}/{total:02d}", theme, 7, "muted", alignment="right")
+                add_text(slide, 11.75, 7.0, 0.85, 0.22,
+                         f"{index:02d}/{total:02d}", theme, 7, "muted", alignment="right")
 
     def inspect_presentation_quality(presentation, warnings: List[str]) -> Dict[str, Any]:
         min_font_size: Optional[float] = None
@@ -545,7 +759,8 @@ def register_workflow_tools(
                     for run in paragraph.runs:
                         if run.font.size:
                             size = float(run.font.size.pt)
-                            min_font_size = size if min_font_size is None else min(min_font_size, size)
+                            min_font_size = size if min_font_size is None else min(
+                                min_font_size, size)
             if not slide_has_text:
                 empty_slide_count += 1
 
@@ -572,8 +787,10 @@ def register_workflow_tools(
         overflow: str = "shrink_then_truncate",
         warnings: Optional[List[str]] = None,
     ) -> None:
-        add_rect(slide, left, top, width, height, theme_color(theme, "surface"), theme_color(theme, "line"), True)
-        add_rect(slide, left, top, 0.08, height, theme_color(theme, accent_role))
+        add_rect(slide, left, top, width, height, theme_color(
+            theme, "surface"), theme_color(theme, "line"), True)
+        add_rect(slide, left, top, 0.08, height,
+                 theme_color(theme, accent_role))
         add_text(
             slide,
             left + 0.22,
@@ -591,7 +808,8 @@ def register_workflow_tools(
             context=f"card title '{title}'",
         )
         body_limit = 5 if density == "compact" else 4
-        lines = trim_items([str(line) for line in body], body_limit, warnings, f"card '{title}'")
+        lines = trim_items([str(line) for line in body],
+                           body_limit, warnings, f"card '{title}'")
         body_text = "\n".join([f"- {line}" for line in lines])
         add_text(
             slide,
@@ -619,26 +837,32 @@ def register_workflow_tools(
         if isinstance(sections, list):
             for item in sections:
                 if isinstance(item, dict):
-                    title = item.get("title") or item.get("label") or item.get("name") or ""
-                    description = item.get("description") or item.get("detail") or item.get("summary") or ""
-                    points = safe_lines(
-                        item.get("points")
-                        or item.get("bullets")
-                        or item.get("content")
-                        or item.get("details")
-                        or description,
-                        6,
-                    )
+                    title = item.get("title") or item.get("headline") or item.get(
+                        "label") or item.get("name") or item.get("finding") or item.get("result") or item.get("conclusion") or ""
+                    description = item.get("description") or item.get(
+                        "detail") or item.get("summary") or item.get("evidence") or item.get("explanation") or ""
+                    points = merge_point_lines(item, description)
                     if description and points and description not in points:
                         points = [str(description)] + points
-                    normalized.append({"title": str(title), "points": points, "raw": item})
+                    normalized.append({
+                        "title": str(title),
+                        "points": points,
+                        "source_note": get_source_note(item),
+                        "raw": item,
+                    })
                 else:
                     title, detail = split_label_detail(item)
-                    normalized.append({"title": title, "points": safe_lines(detail, 6), "raw": item})
+                    normalized.append({
+                        "title": title,
+                        "points": safe_lines(detail, 6),
+                        "source_note": "",
+                        "raw": item,
+                    })
         if not normalized:
             normalized.append({
                 "title": slide_spec.get("title") or "核心观点",
-                "points": safe_lines(slide_spec.get("content") or slide_spec.get("text"), 4),
+                "points": merge_point_lines(slide_spec, slide_spec.get("text")),
+                "source_note": get_source_note(slide_spec),
                 "raw": {},
             })
         return normalized
@@ -652,10 +876,20 @@ def register_workflow_tools(
             spec["content"] = spec.get("body")
         if spec.get("bullets") and not spec.get("items"):
             spec["items"] = spec.get("bullets")
+        if not spec.get("source_note"):
+            source_notes = [get_source_note(spec)]
+            for key in ["items", "sections", "findings", "steps", "concepts", "methods", "literature", "studies"]:
+                values = spec.get(key) or []
+                if isinstance(values, dict):
+                    values = [values]
+                if isinstance(values, list):
+                    source_notes.extend([get_source_note(item) for item in values if isinstance(item, dict)])
+            spec["source_note"] = "；".join([note for note in source_notes if note][:3])
         return spec
 
     def infer_slide_type(slide_spec: Dict[str, Any]) -> str:
-        explicit = (slide_spec.get("slide_type") or slide_spec.get("type") or "").strip().lower()
+        explicit = (slide_spec.get("slide_type")
+                    or slide_spec.get("type") or "").strip().lower()
         if explicit:
             aliases = {
                 "two_column": "comparison",
@@ -710,14 +944,20 @@ def register_workflow_tools(
         add_theme_background(slide, theme)
         add_rect(slide, 0.75, 1.35, 1.5, 0.08, theme_color(theme, "accent"))
         title = slide_spec.get("title") or "演示文稿"
-        subtitle = slide_spec.get("subtitle") or slide_spec.get("content") or ""
-        add_text(slide, 0.78, 1.65, 8.2, 1.2, title, theme, fit_text_size(title, 34, 24, 18), "primary", True, density=density, overflow=overflow, min_font_size=20, warnings=warnings, context="cover title")
-        add_text(slide, 0.82, 3.0, 7.8, 0.8, subtitle, theme, 15, "secondary", density=density, overflow=overflow, min_font_size=10, warnings=warnings, context="cover subtitle")
+        subtitle = slide_spec.get(
+            "subtitle") or slide_spec.get("content") or ""
+        add_text(slide, 0.78, 1.65, 8.2, 1.2, title, theme, fit_text_size(title, 34, 24, 18), "primary", True,
+                 density=density, overflow=overflow, min_font_size=20, warnings=warnings, context="cover title")
+        add_text(slide, 0.82, 3.0, 7.8, 0.8, subtitle, theme, 15, "secondary", density=density,
+                 overflow=overflow, min_font_size=10, warnings=warnings, context="cover subtitle")
         add_rect(slide, 9.6, 0.0, 3.7, 7.5, theme_color(theme, "primary"))
-        add_rect(slide, 10.1, 1.15, 2.35, 0.72, theme_color(theme, "accent"), radius=True)
-        add_text(slide, 10.36, 1.3, 1.85, 0.32, slide_spec.get("tag") or "PPT", theme, 13, "surface", True, "center")
+        add_rect(slide, 10.1, 1.15, 2.35, 0.72,
+                 theme_color(theme, "accent"), radius=True)
+        add_text(slide, 10.36, 1.3, 1.85, 0.32, slide_spec.get(
+            "tag") or "PPT", theme, 13, "surface", True, "center")
         for idx, y in enumerate([2.45, 3.15, 3.85]):
-            add_rect(slide, 10.15 + idx * 0.25, y, 1.8, 0.08, theme_color(theme, "light"))
+            add_rect(slide, 10.15 + idx * 0.25, y, 1.8,
+                     0.08, theme_color(theme, "light"))
 
     def render_summary_slide(
         presentation,
@@ -728,15 +968,20 @@ def register_workflow_tools(
         warnings: List[str],
     ) -> None:
         slide = make_blank_slide(presentation)
-        add_slide_header(slide, slide_spec.get("title") or "方案概览", theme, slide_spec.get("kicker") or "KEY POINTS")
-        statement = slide_spec.get("statement") or slide_spec.get("subtitle") or ""
+        add_slide_header(slide, slide_spec.get("title") or "方案概览",
+                         theme, slide_spec.get("kicker") or "KEY POINTS")
+        statement = slide_spec.get(
+            "statement") or slide_spec.get("subtitle") or ""
         if statement:
-            add_text(slide, 0.78, 1.45, 11.8, 0.42, statement, theme, 12, "secondary", density=density, overflow=overflow, warnings=warnings, context="summary statement")
-        sections = trim_items(normalized_sections(slide_spec), 4, warnings, "summary sections")
+            add_text(slide, 0.78, 1.45, 11.8, 0.42, statement, theme, 12, "secondary",
+                     density=density, overflow=overflow, warnings=warnings, context="summary statement")
+        sections = trim_items(normalized_sections(
+            slide_spec), 4, warnings, "summary sections")
         positions = [(0.78, 1.7), (6.95, 1.7), (0.78, 4.35), (6.95, 4.35)]
         for index, section in enumerate(sections):
             left, top = positions[index]
-            add_card(slide, left, top + (0.25 if statement else 0), 5.65, 2.0 if statement else 2.12, section["title"], section["points"], theme, density=density, overflow=overflow, warnings=warnings)
+            add_card(slide, left, top + (0.25 if statement else 0), 5.65, 2.0 if statement else 2.12,
+                     section["title"], section["points"], theme, density=density, overflow=overflow, warnings=warnings)
 
     def render_cards_slide(
         presentation,
@@ -747,17 +992,21 @@ def register_workflow_tools(
         warnings: List[str],
     ) -> None:
         slide = make_blank_slide(presentation)
-        add_slide_header(slide, slide_spec.get("title") or "核心内容", theme, slide_spec.get("kicker") or "OVERVIEW")
-        sections = trim_items(normalized_sections(slide_spec), 6, warnings, "cards")
+        add_slide_header(slide, slide_spec.get("title") or "核心内容",
+                         theme, slide_spec.get("kicker") or "OVERVIEW")
+        sections = trim_items(normalized_sections(
+            slide_spec), 6, warnings, "cards")
         if len(sections) <= 3:
             width, height = 3.75, 4.45
             for index, section in enumerate(sections):
-                add_card(slide, 0.85 + index * 4.15, 1.8, width, height, section["title"], section["points"], theme, density=density, overflow=overflow, warnings=warnings)
+                add_card(slide, 0.85 + index * 4.15, 1.8, width, height,
+                         section["title"], section["points"], theme, density=density, overflow=overflow, warnings=warnings)
         else:
             width, height = 3.75, 2.05
             for index, section in enumerate(sections):
                 row, col = divmod(index, 3)
-                add_card(slide, 0.85 + col * 4.15, 1.65 + row * 2.48, width, height, section["title"], section["points"], theme, density=density, overflow=overflow, warnings=warnings)
+                add_card(slide, 0.85 + col * 4.15, 1.65 + row * 2.48, width, height,
+                         section["title"], section["points"], theme, density=density, overflow=overflow, warnings=warnings)
 
     def render_two_column_slide(
         presentation,
@@ -768,12 +1017,14 @@ def register_workflow_tools(
         warnings: List[str],
     ) -> None:
         slide = make_blank_slide(presentation)
-        add_slide_header(slide, slide_spec.get("title") or "对比分析", theme, slide_spec.get("kicker") or "COMPARISON")
+        add_slide_header(slide, slide_spec.get("title") or "对比分析",
+                         theme, slide_spec.get("kicker") or "COMPARISON")
         left = slide_spec.get("left") or {}
         right = slide_spec.get("right") or {}
         comparisons = slide_spec.get("comparisons") or []
         if comparisons and not (left or right):
-            comparison_items = [item for item in comparisons if isinstance(item, dict)]
+            comparison_items = [
+                item for item in comparisons if isinstance(item, dict)]
             column_items = [
                 item for item in comparison_items
                 if not any(item.get(key) for key in ["before", "after", "left", "right", "result"])
@@ -789,10 +1040,14 @@ def register_workflow_tools(
                     "points": safe_lines(column_items[1].get("points") or column_items[1].get("content") or column_items[1].get("description"), 8),
                 }
             else:
-                left = {"title": "对比项", "points": [item.get("before") or item.get("left") or item.get("name") or item.get("title") or "" for item in comparison_items]}
-                right = {"title": "优化后", "points": [item.get("after") or item.get("right") or item.get("result") or item.get("content") or "" for item in comparison_items]}
-        add_card(slide, 0.8, 1.75, 5.65, 4.85, left.get("title") or "现状/痛点", safe_lines(left.get("points") or left.get("content"), 8), theme, "danger", density, overflow, warnings)
-        add_card(slide, 6.85, 1.75, 5.65, 4.85, right.get("title") or "目标/方案", safe_lines(right.get("points") or right.get("content"), 8), theme, "success", density, overflow, warnings)
+                left = {"title": "对比项", "points": [item.get("before") or item.get("left") or item.get(
+                    "name") or item.get("title") or "" for item in comparison_items]}
+                right = {"title": "优化后", "points": [item.get("after") or item.get("right") or item.get(
+                    "result") or item.get("content") or "" for item in comparison_items]}
+        add_card(slide, 0.8, 1.75, 5.65, 4.85, left.get("title") or "现状/痛点", safe_lines(left.get(
+            "points") or left.get("content"), 8), theme, "danger", density, overflow, warnings)
+        add_card(slide, 6.85, 1.75, 5.65, 4.85, right.get("title") or "目标/方案", safe_lines(right.get(
+            "points") or right.get("content"), 8), theme, "success", density, overflow, warnings)
 
     def render_process_slide(
         presentation,
@@ -803,19 +1058,27 @@ def register_workflow_tools(
         warnings: List[str],
     ) -> None:
         slide = make_blank_slide(presentation)
-        add_slide_header(slide, slide_spec.get("title") or "推进路径", theme, slide_spec.get("kicker") or "ROADMAP")
-        steps_source = slide_spec.get("steps") or slide_spec.get("items") or slide_spec.get("sections")
-        steps = trim_items(normalized_sections({"items": steps_source or normalized_sections(slide_spec)}), 4, warnings, "process steps")
+        add_slide_header(slide, slide_spec.get("title") or "推进路径",
+                         theme, slide_spec.get("kicker") or "ROADMAP")
+        steps_source = slide_spec.get("steps") or slide_spec.get(
+            "items") or slide_spec.get("sections")
+        steps = trim_items(normalized_sections(
+            {"items": steps_source or normalized_sections(slide_spec)}), 4, warnings, "process steps")
         step_width = 2.65
         y = 3.05
         for index, step in enumerate(steps):
             left = 0.82 + index * 3.05
-            add_rect(slide, left, y, step_width, 0.78, theme_color(theme, "primary") if index % 2 == 0 else theme_color(theme, "secondary"))
-            add_text(slide, left + 0.12, y + 0.18, 0.6, 0.3, f"{index + 1:02d}", theme, 16, "surface", True, "center")
-            add_text(slide, left + 0.82, y + 0.15, 1.68, 0.35, step["title"], theme, fit_text_size(step["title"], 12, 9, 9), "surface", True, density=density, overflow=overflow, warnings=warnings, context="process step title")
-            add_text(slide, left, y + 1.05, step_width, 1.45, "\n".join(step["points"][:3]), theme, 10, "secondary", alignment="center", density=density, overflow=overflow, warnings=warnings, context="process step body")
+            add_rect(slide, left, y, step_width, 0.78, theme_color(
+                theme, "primary") if index % 2 == 0 else theme_color(theme, "secondary"))
+            add_text(slide, left + 0.12, y + 0.18, 0.6, 0.3,
+                     f"{index + 1:02d}", theme, 16, "surface", True, "center")
+            add_text(slide, left + 0.82, y + 0.15, 1.68, 0.35, step["title"], theme, fit_text_size(
+                step["title"], 12, 9, 9), "surface", True, density=density, overflow=overflow, warnings=warnings, context="process step title")
+            add_text(slide, left, y + 1.05, step_width, 1.45, "\n".join(step["points"][:3]), theme, 10, "secondary",
+                     alignment="center", density=density, overflow=overflow, warnings=warnings, context="process step body")
             if index < len(steps) - 1:
-                add_text(slide, left + step_width + 0.16, y + 0.2, 0.28, 0.26, ">", theme, 18, "accent", True, "center")
+                add_text(slide, left + step_width + 0.16, y + 0.2, 0.28,
+                         0.26, ">", theme, 18, "accent", True, "center")
 
     def render_timeline_slide(
         presentation,
@@ -826,17 +1089,24 @@ def register_workflow_tools(
         warnings: List[str],
     ) -> None:
         slide = make_blank_slide(presentation)
-        add_slide_header(slide, slide_spec.get("title") or "阶段计划", theme, slide_spec.get("kicker") or "TIMELINE")
-        steps = trim_items(normalized_sections({"items": slide_spec.get("steps") or slide_spec.get("items") or []}), 6, warnings, "timeline steps")
+        add_slide_header(slide, slide_spec.get("title") or "阶段计划",
+                         theme, slide_spec.get("kicker") or "TIMELINE")
+        steps = trim_items(normalized_sections({"items": slide_spec.get(
+            "steps") or slide_spec.get("items") or []}), 6, warnings, "timeline steps")
         add_rect(slide, 1.0, 3.65, 11.2, 0.04, theme_color(theme, "line"))
         gap = 11.0 / max(len(steps), 1)
         for index, step in enumerate(steps):
             left = 0.95 + index * gap
-            add_rect(slide, left, 3.35, 0.42, 0.42, theme_color(theme, "accent"), radius=True)
-            phase = (step["raw"].get("phase") if isinstance(step.get("raw"), dict) else "") or f"阶段{index + 1}"
-            add_text(slide, left - 0.35, 2.55, 1.25, 0.3, phase, theme, 9, "accent", True, "center", density=density, overflow=overflow, warnings=warnings, context="timeline phase")
-            add_text(slide, left - 0.55, 3.95, 1.65, 0.4, step["title"], theme, 11, "primary", True, "center", density=density, overflow=overflow, warnings=warnings, context="timeline title")
-            add_text(slide, left - 0.75, 4.48, 2.0, 0.95, "\n".join(step["points"][:2]), theme, 9, "secondary", alignment="center", density=density, overflow=overflow, warnings=warnings, context="timeline detail")
+            add_rect(slide, left, 3.35, 0.42, 0.42,
+                     theme_color(theme, "accent"), radius=True)
+            phase = (step["raw"].get("phase") if isinstance(
+                step.get("raw"), dict) else "") or f"阶段{index + 1}"
+            add_text(slide, left - 0.35, 2.55, 1.25, 0.3, phase, theme, 9, "accent", True, "center",
+                     density=density, overflow=overflow, warnings=warnings, context="timeline phase")
+            add_text(slide, left - 0.55, 3.95, 1.65, 0.4, step["title"], theme, 11, "primary", True,
+                     "center", density=density, overflow=overflow, warnings=warnings, context="timeline title")
+            add_text(slide, left - 0.75, 4.48, 2.0, 0.95, "\n".join(step["points"][:2]), theme, 9, "secondary",
+                     alignment="center", density=density, overflow=overflow, warnings=warnings, context="timeline detail")
 
     def render_metrics_slide(
         presentation,
@@ -847,16 +1117,23 @@ def register_workflow_tools(
         warnings: List[str],
     ) -> None:
         slide = make_blank_slide(presentation)
-        add_slide_header(slide, slide_spec.get("title") or "关键指标", theme, slide_spec.get("kicker") or "METRICS")
-        metrics = trim_items(slide_spec.get("metrics") or slide_spec.get("items") or [], 6, warnings, "metrics")
+        add_slide_header(slide, slide_spec.get("title") or "关键指标",
+                         theme, slide_spec.get("kicker") or "METRICS")
+        metrics = trim_items(slide_spec.get("metrics") or slide_spec.get(
+            "items") or [], 6, warnings, "metrics")
         for index, metric in enumerate(metrics):
-            metric = metric if isinstance(metric, dict) else {"label": str(metric), "value": ""}
+            metric = metric if isinstance(metric, dict) else {
+                "label": str(metric), "value": ""}
             row, col = divmod(index, 3)
             left, top = 0.85 + col * 4.15, 1.75 + row * 2.35
-            add_rect(slide, left, top, 3.75, 1.85, theme_color(theme, "surface"), theme_color(theme, "line"), True)
-            add_text(slide, left + 0.25, top + 0.22, 1.15, 0.3, metric.get("label") or metric.get("title") or "", theme, 10, "muted", True, density=density, overflow=overflow, warnings=warnings, context="metric label")
-            add_text(slide, left + 0.25, top + 0.58, 2.45, 0.55, metric.get("value") or metric.get("number") or "", theme, 24, "accent", True, density=density, overflow=overflow, min_font_size=16, warnings=warnings, context="metric value")
-            add_text(slide, left + 0.25, top + 1.22, 3.15, 0.42, metric.get("note") or metric.get("description") or "", theme, 9, "secondary", density=density, overflow=overflow, warnings=warnings, context="metric note")
+            add_rect(slide, left, top, 3.75, 1.85, theme_color(
+                theme, "surface"), theme_color(theme, "line"), True)
+            add_text(slide, left + 0.25, top + 0.22, 1.15, 0.3, metric.get("label") or metric.get("title") or "",
+                     theme, 10, "muted", True, density=density, overflow=overflow, warnings=warnings, context="metric label")
+            add_text(slide, left + 0.25, top + 0.58, 2.45, 0.55, metric.get("value") or metric.get("number") or "", theme, 24,
+                     "accent", True, density=density, overflow=overflow, min_font_size=16, warnings=warnings, context="metric value")
+            add_text(slide, left + 0.25, top + 1.22, 3.15, 0.42, metric.get("note") or metric.get("description") or "",
+                     theme, 9, "secondary", density=density, overflow=overflow, warnings=warnings, context="metric note")
 
     def render_architecture_slide(
         presentation,
@@ -867,20 +1144,29 @@ def register_workflow_tools(
         warnings: List[str],
     ) -> None:
         slide = make_blank_slide(presentation)
-        add_slide_header(slide, slide_spec.get("title") or "架构视图", theme, slide_spec.get("kicker") or "ARCHITECTURE")
-        layers = trim_items(slide_spec.get("layers") or slide_spec.get("items") or [], 5, warnings, "architecture layers")
+        add_slide_header(slide, slide_spec.get("title") or "架构视图",
+                         theme, slide_spec.get("kicker") or "ARCHITECTURE")
+        layers = trim_items(slide_spec.get("layers") or slide_spec.get(
+            "items") or [], 5, warnings, "architecture layers")
         layer_height = 4.9 / max(len(layers), 1)
         for index, layer in enumerate(layers):
-            layer = layer if isinstance(layer, dict) else {"name": str(layer), "items": []}
+            layer = layer if isinstance(layer, dict) else {
+                "name": str(layer), "items": []}
             top = 1.55 + index * layer_height
-            fill = theme_color(theme, "surface") if index % 2 == 0 else theme_color(theme, "light")
-            add_rect(slide, 1.05, top, 11.1, layer_height - 0.18, fill, theme_color(theme, "line"), True)
-            add_text(slide, 1.32, top + 0.2, 1.7, 0.35, layer.get("name") or layer.get("title") or f"Layer {index + 1}", theme, 12, "primary", True, density=density, overflow=overflow, warnings=warnings, context="architecture layer")
-            items = trim_items(safe_lines(layer.get("items") or layer.get("points") or layer.get("content"), 6), 5, warnings, "architecture layer items")
+            fill = theme_color(
+                theme, "surface") if index % 2 == 0 else theme_color(theme, "light")
+            add_rect(slide, 1.05, top, 11.1, layer_height - 0.18,
+                     fill, theme_color(theme, "line"), True)
+            add_text(slide, 1.32, top + 0.2, 1.7, 0.35, layer.get("name") or layer.get("title")
+                     or f"Layer {index + 1}", theme, 12, "primary", True, density=density, overflow=overflow, warnings=warnings, context="architecture layer")
+            items = trim_items(safe_lines(layer.get("items") or layer.get(
+                "points") or layer.get("content"), 6), 5, warnings, "architecture layer items")
             for item_index, item in enumerate(items):
                 item_left = 3.35 + item_index * 1.65
-                add_rect(slide, item_left, top + 0.22, 1.35, 0.42, theme_color(theme, "primary") if item_index % 2 == 0 else theme_color(theme, "secondary"), radius=True)
-                add_text(slide, item_left + 0.08, top + 0.31, 1.18, 0.18, item, theme, 8, "surface", True, "center", density=density, overflow=overflow, min_font_size=7, warnings=warnings, context="architecture item")
+                add_rect(slide, item_left, top + 0.22, 1.35, 0.42, theme_color(theme, "primary")
+                         if item_index % 2 == 0 else theme_color(theme, "secondary"), radius=True)
+                add_text(slide, item_left + 0.08, top + 0.31, 1.18, 0.18, item, theme, 8, "surface", True, "center",
+                         density=density, overflow=overflow, min_font_size=7, warnings=warnings, context="architecture item")
 
     def render_table_slide(
         presentation,
@@ -891,7 +1177,8 @@ def register_workflow_tools(
         warnings: List[str],
     ) -> None:
         slide = make_blank_slide(presentation)
-        add_slide_header(slide, slide_spec.get("title") or "结构化信息", theme, slide_spec.get("kicker") or "TABLE")
+        add_slide_header(slide, slide_spec.get("title") or "结构化信息",
+                         theme, slide_spec.get("kicker") or "TABLE")
         table_spec = slide_spec.get("table") or {}
         headers = table_spec.get("headers") or []
         rows = table_spec.get("rows") or []
@@ -903,14 +1190,19 @@ def register_workflow_tools(
         row_height = 0.58
         top = 1.72
         for col, header in enumerate(headers):
-            add_rect(slide, 0.85 + col * col_width, top, col_width, row_height, theme_color(theme, "primary"), theme_color(theme, "line"))
-            add_text(slide, 0.94 + col * col_width, top + 0.14, col_width - 0.18, 0.22, header, theme, 9, "surface", True, "center", density=density, overflow=overflow, warnings=warnings, context="table header")
+            add_rect(slide, 0.85 + col * col_width, top, col_width, row_height,
+                     theme_color(theme, "primary"), theme_color(theme, "line"))
+            add_text(slide, 0.94 + col * col_width, top + 0.14, col_width - 0.18, 0.22, header, theme, 9, "surface",
+                     True, "center", density=density, overflow=overflow, warnings=warnings, context="table header")
         for row_index, row in enumerate(rows):
             for col, header in enumerate(headers):
-                value = row.get(header, "") if isinstance(row, dict) else (row[col] if isinstance(row, list) and col < len(row) else "")
+                value = row.get(header, "") if isinstance(row, dict) else (
+                    row[col] if isinstance(row, list) and col < len(row) else "")
                 y = top + row_height * (row_index + 1)
-                add_rect(slide, 0.85 + col * col_width, y, col_width, row_height, theme_color(theme, "surface"), theme_color(theme, "line"))
-                add_text(slide, 0.94 + col * col_width, y + 0.13, col_width - 0.18, 0.24, value, theme, 8, "secondary", alignment="center", density=density, overflow=overflow, min_font_size=7, warnings=warnings, context="table cell")
+                add_rect(slide, 0.85 + col * col_width, y, col_width, row_height,
+                         theme_color(theme, "surface"), theme_color(theme, "line"))
+                add_text(slide, 0.94 + col * col_width, y + 0.13, col_width - 0.18, 0.24, value, theme, 8, "secondary",
+                         alignment="center", density=density, overflow=overflow, min_font_size=7, warnings=warnings, context="table cell")
 
     def render_literature_matrix_slide(
         presentation,
@@ -921,16 +1213,22 @@ def register_workflow_tools(
         warnings: List[str],
     ) -> None:
         table_spec = slide_spec.get("table") or {}
-        rows = table_spec.get("rows") or slide_spec.get("literature") or slide_spec.get("studies") or slide_spec.get("items") or []
-        headers = table_spec.get("headers") or ["研究脉络", "主要观点", "不足之处", "本研究切入"]
+        rows = table_spec.get("rows") or slide_spec.get(
+            "literature") or slide_spec.get("studies") or slide_spec.get("items") or []
+        headers = table_spec.get("headers") or [
+            "研究脉络", "主要观点", "不足之处", "本研究切入"]
         normalized_rows = []
         for row in rows:
             if isinstance(row, dict):
                 normalized_rows.append([
-                    row.get("theme") or row.get("topic") or row.get("direction") or row.get("title") or "",
-                    row.get("argument") or row.get("view") or row.get("finding") or row.get("main_point") or row.get("观点") or "",
-                    row.get("gap") or row.get("limitation") or row.get("不足") or "",
-                    row.get("entry") or row.get("positioning") or row.get("contribution") or row.get("本研究切入") or "",
+                    row.get("theme") or row.get("topic") or row.get(
+                        "direction") or row.get("title") or "",
+                    row.get("argument") or row.get("view") or row.get(
+                        "finding") or row.get("main_point") or row.get("观点") or "",
+                    row.get("gap") or row.get(
+                        "limitation") or row.get("不足") or "",
+                    row.get("entry") or row.get("positioning") or row.get(
+                        "contribution") or row.get("本研究切入") or "",
                 ])
             else:
                 normalized_rows.append(safe_lines(row, len(headers)))
@@ -956,23 +1254,34 @@ def register_workflow_tools(
         warnings: List[str],
     ) -> None:
         slide = make_blank_slide(presentation)
-        add_slide_header(slide, slide_spec.get("title") or "研究问题", theme, slide_spec.get("kicker") or "RESEARCH QUESTIONS")
-        background = slide_spec.get("background") or slide_spec.get("context") or slide_spec.get("statement") or ""
+        add_slide_header(slide, slide_spec.get("title") or "研究问题",
+                         theme, slide_spec.get("kicker") or "RESEARCH QUESTIONS")
+        background = slide_spec.get("background") or slide_spec.get(
+            "context") or slide_spec.get("statement") or ""
         if background:
-            add_text(slide, 0.85, 1.48, 11.65, 0.48, background, theme, 11, "secondary", density=density, overflow=overflow, warnings=warnings, context="research question background")
-        questions = trim_items(safe_lines(slide_spec.get("questions") or slide_spec.get("research_questions") or slide_spec.get("items"), 6), 4, warnings, "research questions")
+            add_text(slide, 0.85, 1.48, 11.65, 0.48, background, theme, 11, "secondary", density=density,
+                     overflow=overflow, warnings=warnings, context="research question background")
+        questions = trim_items(safe_lines(slide_spec.get("questions") or slide_spec.get(
+            "research_questions") or slide_spec.get("items"), 6), 4, warnings, "research questions")
         top = 2.05
         for index, question in enumerate(questions):
             y = top + index * 1.12
-            add_rect(slide, 0.9, y, 0.58, 0.58, theme_color(theme, "accent"), radius=True)
-            add_text(slide, 1.02, y + 0.15, 0.34, 0.22, f"Q{index + 1}", theme, 10, "surface", True, "center")
-            add_rect(slide, 1.65, y, 10.55, 0.62, theme_color(theme, "surface"), theme_color(theme, "line"), True)
-            add_text(slide, 1.9, y + 0.14, 9.95, 0.28, question, theme, 13, "primary", True, density=density, overflow=overflow, warnings=warnings, context="research question")
+            add_rect(slide, 0.9, y, 0.58, 0.58, theme_color(
+                theme, "accent"), radius=True)
+            add_text(slide, 1.02, y + 0.15, 0.34, 0.22,
+                     f"Q{index + 1}", theme, 10, "surface", True, "center")
+            add_rect(slide, 1.65, y, 10.55, 0.62, theme_color(
+                theme, "surface"), theme_color(theme, "line"), True)
+            add_text(slide, 1.9, y + 0.14, 9.95, 0.28, question, theme, 13, "primary", True,
+                     density=density, overflow=overflow, warnings=warnings, context="research question")
         gap = slide_spec.get("gap") or slide_spec.get("research_gap") or ""
         if gap:
-            add_rect(slide, 0.9, 5.95, 11.3, 0.68, theme_color(theme, "light"), theme_color(theme, "line"), True)
-            add_text(slide, 1.12, 6.12, 1.0, 0.24, "研究缺口", theme, 10, "accent", True, density=density, overflow=overflow, warnings=warnings, context="research gap label")
-            add_text(slide, 2.25, 6.12, 9.62, 0.24, gap, theme, 10, "secondary", density=density, overflow=overflow, warnings=warnings, context="research gap")
+            add_rect(slide, 0.9, 5.95, 11.3, 0.68, theme_color(
+                theme, "light"), theme_color(theme, "line"), True)
+            add_text(slide, 1.12, 6.12, 1.0, 0.24, "研究缺口", theme, 10, "accent", True,
+                     density=density, overflow=overflow, warnings=warnings, context="research gap label")
+            add_text(slide, 2.25, 6.12, 9.62, 0.24, gap, theme, 10, "secondary",
+                     density=density, overflow=overflow, warnings=warnings, context="research gap")
 
     def render_theoretical_framework_slide(
         presentation,
@@ -983,25 +1292,36 @@ def register_workflow_tools(
         warnings: List[str],
     ) -> None:
         slide = make_blank_slide(presentation)
-        add_slide_header(slide, slide_spec.get("title") or "理论框架", theme, slide_spec.get("kicker") or "FRAMEWORK")
-        concepts = trim_items(normalized_sections({"items": slide_spec.get("concepts") or slide_spec.get("variables") or slide_spec.get("framework") or slide_spec.get("items") or []}), 5, warnings, "framework concepts")
+        add_slide_header(slide, slide_spec.get("title") or "理论框架",
+                         theme, slide_spec.get("kicker") or "FRAMEWORK")
+        concepts = trim_items(normalized_sections({"items": slide_spec.get("concepts") or slide_spec.get(
+            "variables") or slide_spec.get("framework") or slide_spec.get("items") or []}), 5, warnings, "framework concepts")
         if not concepts:
-            concepts = [{"title": "核心概念", "points": safe_lines(slide_spec.get("content"), 4), "raw": {}}]
+            concepts = [{"title": "核心概念", "points": safe_lines(
+                slide_spec.get("content"), 4), "raw": {}}]
         gap = 10.8 / max(len(concepts), 1)
         y = 2.05
         for index, concept in enumerate(concepts):
             left = 0.95 + index * gap
             width = min(2.0, gap - 0.18)
-            add_rect(slide, left, y, width, 1.12, theme_color(theme, "surface"), theme_color(theme, "line"), True)
+            add_rect(slide, left, y, width, 1.12, theme_color(
+                theme, "surface"), theme_color(theme, "line"), True)
             add_rect(slide, left, y, width, 0.14, theme_color(theme, "accent"))
-            add_text(slide, left + 0.12, y + 0.28, width - 0.24, 0.28, concept["title"], theme, 11, "primary", True, "center", density=density, overflow=overflow, warnings=warnings, context="framework concept")
-            add_text(slide, left + 0.12, y + 0.68, width - 0.24, 0.26, "\n".join(concept["points"][:2]), theme, 8, "secondary", alignment="center", density=density, overflow=overflow, min_font_size=7, warnings=warnings, context="framework concept detail")
+            add_text(slide, left + 0.12, y + 0.28, width - 0.24, 0.28, concept["title"], theme, 11, "primary",
+                     True, "center", density=density, overflow=overflow, warnings=warnings, context="framework concept")
+            add_text(slide, left + 0.12, y + 0.68, width - 0.24, 0.26, "\n".join(concept["points"][:2]), theme, 8, "secondary",
+                     alignment="center", density=density, overflow=overflow, min_font_size=7, warnings=warnings, context="framework concept detail")
             if index < len(concepts) - 1:
-                add_text(slide, left + width + 0.1, y + 0.43, 0.35, 0.28, ">", theme, 18, "accent", True, "center")
-        propositions = safe_lines(slide_spec.get("relations") or slide_spec.get("propositions") or slide_spec.get("hypotheses"), 4)
-        add_card(slide, 0.95, 4.15, 5.45, 1.78, "关系假设 / 分析命题", propositions, theme, "accent", density, overflow, warnings)
-        mechanism = safe_lines(slide_spec.get("mechanism") or slide_spec.get("explanation"), 4)
-        add_card(slide, 6.75, 4.15, 5.45, 1.78, "机制解释", mechanism, theme, "success", density, overflow, warnings)
+                add_text(slide, left + width + 0.1, y + 0.43, 0.35,
+                         0.28, ">", theme, 18, "accent", True, "center")
+        propositions = safe_lines(slide_spec.get("relations") or slide_spec.get(
+            "propositions") or slide_spec.get("hypotheses"), 4)
+        add_card(slide, 0.95, 4.15, 5.45, 1.78, "关系假设 / 分析命题",
+                 propositions, theme, "accent", density, overflow, warnings)
+        mechanism = safe_lines(slide_spec.get(
+            "mechanism") or slide_spec.get("explanation"), 4)
+        add_card(slide, 6.75, 4.15, 5.45, 1.78, "机制解释", mechanism,
+                 theme, "success", density, overflow, warnings)
 
     def render_method_design_slide(
         presentation,
@@ -1012,25 +1332,37 @@ def register_workflow_tools(
         warnings: List[str],
     ) -> None:
         slide = make_blank_slide(presentation)
-        add_slide_header(slide, slide_spec.get("title") or "研究设计", theme, slide_spec.get("kicker") or "METHOD")
-        method_items = slide_spec.get("methods") or slide_spec.get("research_design") or slide_spec.get("steps")
+        add_slide_header(slide, slide_spec.get("title") or "研究设计",
+                         theme, slide_spec.get("kicker") or "METHOD")
+        method_items = slide_spec.get("methods") or slide_spec.get(
+            "research_design") or slide_spec.get("steps")
         if not method_items:
             method_items = [
-                {"title": "数据来源", "points": safe_lines(slide_spec.get("data_sources") or slide_spec.get("data"), 3)},
-                {"title": "样本范围", "points": safe_lines(slide_spec.get("sample") or slide_spec.get("scope"), 3)},
-                {"title": "变量设计", "points": safe_lines(slide_spec.get("variables"), 3)},
-                {"title": "分析方法", "points": safe_lines(slide_spec.get("analysis") or slide_spec.get("method"), 3)},
+                {"title": "数据来源", "points": safe_lines(slide_spec.get(
+                    "data_sources") or slide_spec.get("data"), 3)},
+                {"title": "样本范围", "points": safe_lines(
+                    slide_spec.get("sample") or slide_spec.get("scope"), 3)},
+                {"title": "变量设计", "points": safe_lines(
+                    slide_spec.get("variables"), 3)},
+                {"title": "分析方法", "points": safe_lines(
+                    slide_spec.get("analysis") or slide_spec.get("method"), 3)},
             ]
-        steps = trim_items(normalized_sections({"items": method_items}), 4, warnings, "method design steps")
+        steps = trim_items(normalized_sections(
+            {"items": method_items}), 4, warnings, "method design steps")
         positions = [(0.85, 1.72), (6.85, 1.72), (0.85, 4.05), (6.85, 4.05)]
         labels = ["01", "02", "03", "04"]
         for index, step in enumerate(steps):
             left, top = positions[index]
-            add_rect(slide, left, top, 5.2, 1.78, theme_color(theme, "surface"), theme_color(theme, "line"), True)
-            add_rect(slide, left + 0.22, top + 0.22, 0.52, 0.52, theme_color(theme, "primary"), radius=True)
-            add_text(slide, left + 0.31, top + 0.36, 0.34, 0.18, labels[index], theme, 9, "surface", True, "center")
-            add_text(slide, left + 0.9, top + 0.24, 3.95, 0.32, step["title"], theme, 13, "primary", True, density=density, overflow=overflow, warnings=warnings, context="method step title")
-            add_text(slide, left + 0.9, top + 0.78, 3.95, 0.68, "\n".join([f"- {line}" for line in step["points"][:3]]), theme, 9, "secondary", density=density, overflow=overflow, warnings=warnings, context="method step body")
+            add_rect(slide, left, top, 5.2, 1.78, theme_color(
+                theme, "surface"), theme_color(theme, "line"), True)
+            add_rect(slide, left + 0.22, top + 0.22, 0.52, 0.52,
+                     theme_color(theme, "primary"), radius=True)
+            add_text(slide, left + 0.31, top + 0.36, 0.34, 0.18,
+                     labels[index], theme, 9, "surface", True, "center")
+            add_text(slide, left + 0.9, top + 0.24, 3.95, 0.32, step["title"], theme, 13, "primary",
+                     True, density=density, overflow=overflow, warnings=warnings, context="method step title")
+            add_text(slide, left + 0.9, top + 0.78, 3.95, 0.68, "\n".join([f"- {line}" for line in step["points"][:3]]),
+                     theme, 9, "secondary", density=density, overflow=overflow, warnings=warnings, context="method step body")
 
     def render_findings_slide(
         presentation,
@@ -1041,17 +1373,24 @@ def register_workflow_tools(
         warnings: List[str],
     ) -> None:
         slide = make_blank_slide(presentation)
-        add_slide_header(slide, slide_spec.get("title") or "主要发现", theme, slide_spec.get("kicker") or "FINDINGS")
-        findings = trim_items(normalized_sections({"items": slide_spec.get("findings") or slide_spec.get("items") or slide_spec.get("sections") or []}), 4, warnings, "findings")
-        headline = slide_spec.get("headline") or slide_spec.get("statement") or ""
+        add_slide_header(slide, slide_spec.get("title") or "主要发现",
+                         theme, slide_spec.get("kicker") or "FINDINGS")
+        findings = trim_items(normalized_sections({"items": slide_spec.get("findings") or slide_spec.get(
+            "items") or slide_spec.get("sections") or []}), 4, warnings, "findings")
+        headline = slide_spec.get(
+            "headline") or slide_spec.get("statement") or ""
         if headline:
-            add_rect(slide, 0.9, 1.55, 11.25, 0.88, theme_color(theme, "light"), theme_color(theme, "line"), True)
-            add_text(slide, 1.15, 1.78, 10.75, 0.34, headline, theme, 16, "primary", True, density=density, overflow=overflow, warnings=warnings, context="finding headline")
-        positions = [(0.9, 2.75), (6.85, 2.75), (0.9, 4.78), (6.85, 4.78)] if headline else [(0.9, 1.72), (6.85, 1.72), (0.9, 4.05), (6.85, 4.05)]
+            add_rect(slide, 0.9, 1.55, 11.25, 0.88, theme_color(
+                theme, "light"), theme_color(theme, "line"), True)
+            add_text(slide, 1.15, 1.78, 10.75, 0.34, headline, theme, 16, "primary", True,
+                     density=density, overflow=overflow, warnings=warnings, context="finding headline")
+        positions = [(0.9, 2.75), (6.85, 2.75), (0.9, 4.78), (6.85, 4.78)] if headline else [
+            (0.9, 1.72), (6.85, 1.72), (0.9, 4.05), (6.85, 4.05)]
         card_height = 1.42 if headline else 1.78
         for index, finding in enumerate(findings):
             left, top = positions[index]
-            add_card(slide, left, top, 5.25, card_height, finding["title"], finding["points"], theme, "accent" if index % 2 == 0 else "success", density, overflow, warnings)
+            add_card(slide, left, top, 5.25, card_height, finding["title"], finding["points"],
+                     theme, "accent" if index % 2 == 0 else "success", density, overflow, warnings)
 
     def render_contribution_limitations_slide(
         presentation,
@@ -1062,14 +1401,21 @@ def register_workflow_tools(
         warnings: List[str],
     ) -> None:
         slide = make_blank_slide(presentation)
-        add_slide_header(slide, slide_spec.get("title") or "研究贡献与局限", theme, slide_spec.get("kicker") or "CONTRIBUTION")
-        contributions = safe_lines(slide_spec.get("contributions") or slide_spec.get("contribution") or slide_spec.get("left") or slide_spec.get("items"), 6)
-        limitations = safe_lines(slide_spec.get("limitations") or slide_spec.get("limitation") or slide_spec.get("right"), 6)
-        implications = safe_lines(slide_spec.get("implications") or slide_spec.get("future") or slide_spec.get("outlook"), 4)
-        add_card(slide, 0.85, 1.72, 5.45, 3.1, "研究贡献", contributions, theme, "success", density, overflow, warnings)
-        add_card(slide, 6.85, 1.72, 5.45, 3.1, "局限与边界", limitations, theme, "danger", density, overflow, warnings)
+        add_slide_header(slide, slide_spec.get("title") or "研究贡献与局限",
+                         theme, slide_spec.get("kicker") or "CONTRIBUTION")
+        contributions = safe_lines(slide_spec.get("contributions") or slide_spec.get(
+            "contribution") or slide_spec.get("left") or slide_spec.get("items"), 6)
+        limitations = safe_lines(slide_spec.get("limitations") or slide_spec.get(
+            "limitation") or slide_spec.get("right"), 6)
+        implications = safe_lines(slide_spec.get("implications") or slide_spec.get(
+            "future") or slide_spec.get("outlook"), 4)
+        add_card(slide, 0.85, 1.72, 5.45, 3.1, "研究贡献", contributions,
+                 theme, "success", density, overflow, warnings)
+        add_card(slide, 6.85, 1.72, 5.45, 3.1, "局限与边界", limitations,
+                 theme, "danger", density, overflow, warnings)
         if implications:
-            add_card(slide, 0.85, 5.28, 11.45, 1.05, "后续研究方向", implications, theme, "accent", density, overflow, warnings)
+            add_card(slide, 0.85, 5.28, 11.45, 1.05, "后续研究方向",
+                     implications, theme, "accent", density, overflow, warnings)
 
     def render_quote_slide(
         presentation,
@@ -1082,12 +1428,17 @@ def register_workflow_tools(
         slide = make_blank_slide(presentation)
         add_theme_background(slide, theme)
         add_rect(slide, 1.0, 1.45, 0.12, 4.55, theme_color(theme, "accent"))
-        add_text(slide, 1.35, 1.35, 10.2, 0.45, slide_spec.get("title") or "核心结论", theme, 18, "primary", True, density=density, overflow=overflow, warnings=warnings, context="quote title")
-        statement = slide_spec.get("statement") or slide_spec.get("content") or ""
-        add_text(slide, 1.35, 2.25, 10.2, 1.8, statement, theme, 24, "primary", True, density=density, overflow=overflow, min_font_size=15, warnings=warnings, context="quote statement")
-        points = safe_lines(slide_spec.get("points") or slide_spec.get("items"), 4)
+        add_text(slide, 1.35, 1.35, 10.2, 0.45, slide_spec.get("title") or "核心结论", theme, 18, "primary",
+                 True, density=density, overflow=overflow, warnings=warnings, context="quote title")
+        statement = slide_spec.get(
+            "statement") or slide_spec.get("content") or ""
+        add_text(slide, 1.35, 2.25, 10.2, 1.8, statement, theme, 24, "primary", True, density=density,
+                 overflow=overflow, min_font_size=15, warnings=warnings, context="quote statement")
+        points = safe_lines(slide_spec.get("points")
+                            or merge_point_lines(slide_spec, slide_spec.get("items")), 4)
         if points:
-            add_text(slide, 1.42, 4.62, 9.9, 0.75, "  /  ".join(points), theme, 11, "secondary", density=density, overflow=overflow, warnings=warnings, context="quote points")
+            add_text(slide, 1.42, 4.62, 9.9, 0.75, "  /  ".join(points), theme, 11, "secondary",
+                     density=density, overflow=overflow, warnings=warnings, context="quote points")
 
     def render_closing_slide(
         presentation,
@@ -1100,9 +1451,12 @@ def register_workflow_tools(
         slide = make_blank_slide(presentation)
         add_theme_background(slide, theme)
         title = slide_spec.get("title") or "谢谢"
-        subtitle = slide_spec.get("subtitle") or slide_spec.get("content") or ""
-        add_text(slide, 2.0, 2.35, 9.3, 0.8, title, theme, 32, "primary", True, "center", density=density, overflow=overflow, min_font_size=18, warnings=warnings, context="closing title")
-        add_text(slide, 2.35, 3.25, 8.6, 0.7, subtitle, theme, 14, "secondary", alignment="center", density=density, overflow=overflow, warnings=warnings, context="closing subtitle")
+        subtitle = slide_spec.get(
+            "subtitle") or slide_spec.get("content") or ""
+        add_text(slide, 2.0, 2.35, 9.3, 0.8, title, theme, 32, "primary", True, "center", density=density,
+                 overflow=overflow, min_font_size=18, warnings=warnings, context="closing title")
+        add_text(slide, 2.35, 3.25, 8.6, 0.7, subtitle, theme, 14, "secondary", alignment="center",
+                 density=density, overflow=overflow, warnings=warnings, context="closing subtitle")
 
     def render_generated_slide(
         presentation,
@@ -1114,40 +1468,59 @@ def register_workflow_tools(
     ) -> str:
         slide_type = infer_slide_type(slide_spec)
         if slide_type == "cover":
-            render_cover_slide(presentation, slide_spec, theme, density, overflow, warnings)
+            render_cover_slide(presentation, slide_spec,
+                               theme, density, overflow, warnings)
         elif slide_type in {"comparison"}:
-            render_two_column_slide(presentation, slide_spec, theme, density, overflow, warnings)
+            render_two_column_slide(
+                presentation, slide_spec, theme, density, overflow, warnings)
         elif slide_type in {"process"}:
-            render_process_slide(presentation, slide_spec, theme, density, overflow, warnings)
+            render_process_slide(presentation, slide_spec,
+                                 theme, density, overflow, warnings)
         elif slide_type == "timeline":
-            render_timeline_slide(presentation, slide_spec, theme, density, overflow, warnings)
+            render_timeline_slide(presentation, slide_spec,
+                                  theme, density, overflow, warnings)
         elif slide_type in {"cards", "section"}:
-            render_cards_slide(presentation, slide_spec, theme, density, overflow, warnings)
+            render_cards_slide(presentation, slide_spec,
+                               theme, density, overflow, warnings)
         elif slide_type == "metrics":
-            render_metrics_slide(presentation, slide_spec, theme, density, overflow, warnings)
+            render_metrics_slide(presentation, slide_spec,
+                                 theme, density, overflow, warnings)
         elif slide_type == "architecture":
-            render_architecture_slide(presentation, slide_spec, theme, density, overflow, warnings)
+            render_architecture_slide(
+                presentation, slide_spec, theme, density, overflow, warnings)
         elif slide_type == "table":
-            render_table_slide(presentation, slide_spec, theme, density, overflow, warnings)
+            render_table_slide(presentation, slide_spec,
+                               theme, density, overflow, warnings)
         elif slide_type == "literature_matrix":
-            render_literature_matrix_slide(presentation, slide_spec, theme, density, overflow, warnings)
+            render_literature_matrix_slide(
+                presentation, slide_spec, theme, density, overflow, warnings)
         elif slide_type == "research_questions":
-            render_research_questions_slide(presentation, slide_spec, theme, density, overflow, warnings)
+            render_research_questions_slide(
+                presentation, slide_spec, theme, density, overflow, warnings)
         elif slide_type == "theoretical_framework":
-            render_theoretical_framework_slide(presentation, slide_spec, theme, density, overflow, warnings)
+            render_theoretical_framework_slide(
+                presentation, slide_spec, theme, density, overflow, warnings)
         elif slide_type == "method_design":
-            render_method_design_slide(presentation, slide_spec, theme, density, overflow, warnings)
+            render_method_design_slide(
+                presentation, slide_spec, theme, density, overflow, warnings)
         elif slide_type == "findings":
-            render_findings_slide(presentation, slide_spec, theme, density, overflow, warnings)
+            render_findings_slide(presentation, slide_spec,
+                                  theme, density, overflow, warnings)
         elif slide_type == "contribution_limitations":
-            render_contribution_limitations_slide(presentation, slide_spec, theme, density, overflow, warnings)
+            render_contribution_limitations_slide(
+                presentation, slide_spec, theme, density, overflow, warnings)
         elif slide_type == "quote":
-            render_quote_slide(presentation, slide_spec, theme, density, overflow, warnings)
+            render_quote_slide(presentation, slide_spec,
+                               theme, density, overflow, warnings)
         elif slide_type in {"closing", "end"}:
-            render_closing_slide(presentation, slide_spec, theme, density, overflow, warnings)
+            render_closing_slide(presentation, slide_spec,
+                                 theme, density, overflow, warnings)
         else:
-            render_summary_slide(presentation, slide_spec, theme, density, overflow, warnings)
+            render_summary_slide(presentation, slide_spec,
+                                 theme, density, overflow, warnings)
             slide_type = "summary"
+        if presentation.slides:
+            add_source_note(presentation.slides[-1], slide_spec, theme, warnings)
         return slide_type
 
     def collect_template_files(template_directory: str = "") -> List[str]:
@@ -1167,7 +1540,8 @@ def register_workflow_tools(
             for root, _, files in os.walk(directory):
                 for file_name in files:
                     if file_name.lower().endswith((".pptx", ".potx")):
-                        template_files.append(os.path.abspath(os.path.join(root, file_name)))
+                        template_files.append(os.path.abspath(
+                            os.path.join(root, file_name)))
 
         return sorted(set(template_files))
 
@@ -1270,7 +1644,8 @@ def register_workflow_tools(
             "blue": ["blue", "蓝"],
         }
 
-        tags = [tag for tag, hints in rules.items() if any(hint in text for hint in hints)]
+        tags = [tag for tag, hints in rules.items() if any(
+            hint in text for hint in hints)]
         return tags or ["general"]
 
     def resolve_template_reference(template_config: Optional[Dict[str, Any]] = None) -> Tuple[Optional[str], Dict[str, Any]]:
@@ -1279,7 +1654,8 @@ def register_workflow_tools(
         template_path = (template_config.get("template_path") or "").strip()
         template_name = (template_config.get("template_name") or "").strip()
         theme_hint = (template_config.get("theme_hint") or "").strip()
-        template_directory = (template_config.get("template_directory") or "").strip()
+        template_directory = (template_config.get(
+            "template_directory") or "").strip()
 
         if template_path:
             absolute_path = os.path.abspath(os.path.expanduser(template_path))
@@ -1357,7 +1733,8 @@ def register_workflow_tools(
         ]
 
     def placeholder_role(placeholder) -> str:
-        placeholder_type = str(getattr(placeholder.placeholder_format, "type", "")).upper()
+        placeholder_type = str(
+            getattr(placeholder.placeholder_format, "type", "")).upper()
         placeholder_name = normalize_text(getattr(placeholder, "name", ""))
 
         if "SUBTITLE" in placeholder_type or "subtitle" in placeholder_name:
@@ -1397,7 +1774,8 @@ def register_workflow_tools(
             if 0 <= preferred_index < len(layouts):
                 return preferred_index
             if policy == "strict_preferred_only":
-                raise ValueError(f"Preferred layout index is invalid: {preferred_index}")
+                raise ValueError(
+                    f"Preferred layout index is invalid: {preferred_index}")
 
         normalized_slide_type = normalize_text(slide_type)
 
@@ -1469,7 +1847,8 @@ def register_workflow_tools(
             clear_text_frame(shape.text_frame)
 
     def get_text_placeholders(slide) -> Dict[str, List[Any]]:
-        placeholders: Dict[str, List[Any]] = {"title": [], "subtitle": [], "body": [], "text": []}
+        placeholders: Dict[str, List[Any]] = {
+            "title": [], "subtitle": [], "body": [], "text": []}
         for placeholder in slide.placeholders:
             if not hasattr(placeholder, "text_frame"):
                 continue
@@ -1491,7 +1870,8 @@ def register_workflow_tools(
                 continue
             generic_text_shapes.append(shape)
 
-        generic_text_shapes.sort(key=lambda item: (item.top, -(item.width * item.height)))
+        generic_text_shapes.sort(key=lambda item: (
+            item.top, -(item.width * item.height)))
         for shape in generic_text_shapes:
             if shape.top < int(2.2 * emu_per_inch) and not placeholders["title"]:
                 placeholders["title"].append(shape)
@@ -1526,18 +1906,21 @@ def register_workflow_tools(
                 font_name=font_name,
                 bold=bold,
                 italic=italic,
-                color=tuple(color) if isinstance(color, list) and len(color) == 3 else None,
+                color=tuple(color) if isinstance(
+                    color, list) and len(color) == 3 else None,
                 alignment=alignment,
             )
 
     def join_slide_items(slide_spec: Dict[str, Any]) -> List[str]:
-        items = slide_spec.get("items") or slide_spec.get("bullet_points") or slide_spec.get("points") or []
+        items = slide_spec.get("items") or slide_spec.get(
+            "bullet_points") or slide_spec.get("points") or []
         if not isinstance(items, list):
             items = [str(items)]
         return [str(item) for item in items if str(item).strip()]
 
     def render_known_template_slide(slide, slide_spec: Dict[str, Any]) -> bool:
-        slide_type = (slide_spec.get("slide_type") or slide_spec.get("type") or "").strip()
+        slide_type = (slide_spec.get("slide_type")
+                      or slide_spec.get("type") or "").strip()
         layout_name = getattr(slide.slide_layout, "name", "")
         shape_count = len(slide.shapes)
         items = join_slide_items(slide_spec)
@@ -1563,7 +1946,8 @@ def register_workflow_tools(
         if layout_name == "标题和内容" and shape_count == 8 and slide_type in ("section", "summary"):
             updated = False
             updated |= set_shape_text(slide.shapes[2], title)
-            body_text = slide_spec.get("content") or slide_spec.get("text") or "；".join(items[:3])
+            body_text = slide_spec.get("content") or slide_spec.get(
+                "text") or "；".join(items[:3])
             updated |= set_shape_text(slide.shapes[4], body_text)
             return updated
 
@@ -1628,7 +2012,8 @@ def register_workflow_tools(
                 text_frame = placeholder.text_frame
                 clear_text_frame(text_frame)
                 for item_index, line in enumerate(chunk):
-                    paragraph = text_frame.paragraphs[0] if item_index == 0 else text_frame.add_paragraph()
+                    paragraph = text_frame.paragraphs[0] if item_index == 0 else text_frame.add_paragraph(
+                    )
                     paragraph.text = line
                     paragraph.level = 0
             return True
@@ -1636,7 +2021,8 @@ def register_workflow_tools(
         text_frame = body_placeholders[0].text_frame
         clear_text_frame(text_frame)
         for index, line in enumerate(lines):
-            paragraph = text_frame.paragraphs[0] if index == 0 else text_frame.add_paragraph()
+            paragraph = text_frame.paragraphs[0] if index == 0 else text_frame.add_paragraph(
+            )
             paragraph.text = str(line)
             paragraph.level = 0
         return True
@@ -1647,8 +2033,10 @@ def register_workflow_tools(
         template_rendering: Dict[str, Any],
         slide_position: int,
     ):
-        reuse_existing_template_slides = template_rendering.get("use_template_sample_slides", True)
-        existing_template_slide_count = template_rendering.get("existing_template_slide_count", 0)
+        reuse_existing_template_slides = template_rendering.get(
+            "use_template_sample_slides", True)
+        existing_template_slide_count = template_rendering.get(
+            "existing_template_slide_count", 0)
 
         if reuse_existing_template_slides and slide_position < existing_template_slide_count and slide_position < len(presentation.slides):
             slide = presentation.slides[slide_position]
@@ -1657,9 +2045,11 @@ def register_workflow_tools(
 
         layout_index = select_layout_index(
             presentation,
-            (slide_spec.get("slide_type") or slide_spec.get("type") or "bullet").strip(),
+            (slide_spec.get("slide_type") or slide_spec.get(
+                "type") or "bullet").strip(),
             slide_spec.get("preferred_layout"),
-            template_rendering.get("layout_selection_policy", "preferred_then_best_match"),
+            template_rendering.get(
+                "layout_selection_policy", "preferred_then_best_match"),
         )
         slide, layout = ppt_utils.add_slide(presentation, layout_index)
         return slide, layout, len(presentation.slides) - 1, False
@@ -1670,22 +2060,26 @@ def register_workflow_tools(
         template_rendering: Dict[str, Any],
         slide_position: int,
     ) -> Dict[str, Any]:
-        slide_type = (slide_spec.get("slide_type") or slide_spec.get("type") or "bullet").strip()
-        placeholder_policy = template_rendering.get("placeholder_fill_policy", "prefer_placeholders")
+        slide_type = (slide_spec.get("slide_type")
+                      or slide_spec.get("type") or "bullet").strip()
+        placeholder_policy = template_rendering.get(
+            "placeholder_fill_policy", "prefer_placeholders")
         slide, layout, slide_index, reused_template_slide = get_slide_for_render(
             presentation,
             slide_spec,
             template_rendering,
             slide_position,
         )
-        layout_index = next((idx for idx, candidate in enumerate(presentation.slide_layouts) if candidate == layout), -1)
+        layout_index = next((idx for idx, candidate in enumerate(
+            presentation.slide_layouts) if candidate == layout), -1)
 
         title = slide_spec.get("title", "")
         subtitle = slide_spec.get("subtitle", "")
 
         warnings: List[str] = []
         rendered_using = "template_layout"
-        known_template_rendered = render_known_template_slide(slide, slide_spec)
+        known_template_rendered = render_known_template_slide(
+            slide, slide_spec)
         if known_template_rendered:
             clear_slide_prompt_text(slide)
             return {
@@ -1698,45 +2092,60 @@ def register_workflow_tools(
                 "warnings": warnings,
             }
 
-        fill_result = fill_title_placeholders(slide, title=title, subtitle=subtitle)
+        fill_result = fill_title_placeholders(
+            slide, title=title, subtitle=subtitle)
 
         if slide_type in ("cover", "section"):
             if title and not fill_result["title_filled"]:
-                ppt_utils.add_textbox(slide, 0.8, 0.8, 8.5, 1.0, title, font_size=24, bold=True)
-                warnings.append("Cover title used dynamic textbox because no title placeholder was available")
+                ppt_utils.add_textbox(
+                    slide, 0.8, 0.8, 8.5, 1.0, title, font_size=24, bold=True)
+                warnings.append(
+                    "Cover title used dynamic textbox because no title placeholder was available")
                 rendered_using = "dynamic_content"
             if subtitle and not fill_result["subtitle_filled"]:
-                ppt_utils.add_textbox(slide, 0.9, 1.8, 8.0, 0.8, subtitle, font_size=14)
+                ppt_utils.add_textbox(
+                    slide, 0.9, 1.8, 8.0, 0.8, subtitle, font_size=14)
                 rendered_using = "dynamic_content"
             clear_slide_prompt_text(slide)
 
         elif slide_type in ("agenda", "bullet", "summary", "closing"):
-            items = slide_spec.get("items") or slide_spec.get("bullet_points") or slide_spec.get("points") or []
+            items = slide_spec.get("items") or slide_spec.get(
+                "bullet_points") or slide_spec.get("points") or []
             if not isinstance(items, list):
                 items = [str(items)]
-            used_placeholder = placeholder_policy != "ignore_placeholders" and add_bullet_content(slide, items)
+            used_placeholder = placeholder_policy != "ignore_placeholders" and add_bullet_content(
+                slide, items)
             if not used_placeholder:
                 body_text = "\n".join(f"- {item}" for item in items)
-                ppt_utils.add_textbox(slide, 0.9, 1.8, 8.0, 4.5, body_text, font_size=18)
-                warnings.append("Bullet content used a dynamic textbox fallback")
+                ppt_utils.add_textbox(
+                    slide, 0.9, 1.8, 8.0, 4.5, body_text, font_size=18)
+                warnings.append(
+                    "Bullet content used a dynamic textbox fallback")
                 rendered_using = "dynamic_content"
             clear_slide_prompt_text(slide)
 
         elif slide_type == "two_column":
             left_title = slide_spec.get("left_title", "Left")
             right_title = slide_spec.get("right_title", "Right")
-            left_points = slide_spec.get("left_points") or slide_spec.get("left_items") or []
-            right_points = slide_spec.get("right_points") or slide_spec.get("right_items") or []
+            left_points = slide_spec.get(
+                "left_points") or slide_spec.get("left_items") or []
+            right_points = slide_spec.get(
+                "right_points") or slide_spec.get("right_items") or []
 
-            left_text = left_title + "\n" + "\n".join(f"- {item}" for item in left_points)
-            right_text = right_title + "\n" + "\n".join(f"- {item}" for item in right_points)
+            left_text = left_title + "\n" + \
+                "\n".join(f"- {item}" for item in left_points)
+            right_text = right_title + "\n" + \
+                "\n".join(f"- {item}" for item in right_points)
 
-            ppt_utils.add_textbox(slide, 0.7, 1.7, 4.2, 4.5, left_text, font_size=16)
-            ppt_utils.add_textbox(slide, 5.0, 1.7, 4.2, 4.5, right_text, font_size=16)
+            ppt_utils.add_textbox(slide, 0.7, 1.7, 4.2,
+                                  4.5, left_text, font_size=16)
+            ppt_utils.add_textbox(slide, 5.0, 1.7, 4.2,
+                                  4.5, right_text, font_size=16)
             rendered_using = "mixed"
 
         elif slide_type == "image_text":
-            body_text = slide_spec.get("content") or slide_spec.get("text") or ""
+            body_text = slide_spec.get(
+                "content") or slide_spec.get("text") or ""
             image_path = slide_spec.get("image_path", "")
             body_placeholders = find_body_placeholders(slide)
             body_placeholder = body_placeholders[0] if body_placeholders else None
@@ -1744,14 +2153,17 @@ def register_workflow_tools(
                 clear_text_frame(body_placeholder.text_frame)
                 body_placeholder.text = str(body_text)
             else:
-                ppt_utils.add_textbox(slide, 0.7, 1.8, 4.2, 4.4, str(body_text), font_size=16)
+                ppt_utils.add_textbox(
+                    slide, 0.7, 1.8, 4.2, 4.4, str(body_text), font_size=16)
                 rendered_using = "dynamic_content"
 
             if image_path and os.path.exists(image_path):
                 ppt_utils.add_image(slide, image_path, 5.2, 1.7, 4.0, 3.8)
             else:
-                ppt_utils.add_textbox(slide, 5.2, 2.7, 3.5, 1.0, slide_spec.get("image_caption", "Image placeholder"), font_size=14)
-                warnings.append("Image slide had no valid image path; inserted placeholder text")
+                ppt_utils.add_textbox(slide, 5.2, 2.7, 3.5, 1.0, slide_spec.get(
+                    "image_caption", "Image placeholder"), font_size=14)
+                warnings.append(
+                    "Image slide had no valid image path; inserted placeholder text")
                 rendered_using = "mixed"
 
         elif slide_type == "table":
@@ -1759,7 +2171,8 @@ def register_workflow_tools(
             if table_data and isinstance(table_data[0], list):
                 rows = len(table_data)
                 cols = max(len(row) for row in table_data)
-                table_shape = ppt_utils.add_table(slide, rows, cols, 0.7, 1.8, 8.5, 3.8)
+                table_shape = ppt_utils.add_table(
+                    slide, rows, cols, 0.7, 1.8, 8.5, 3.8)
                 table = table_shape.table
                 for row_index, row in enumerate(table_data):
                     for col_index, value in enumerate(row):
@@ -1770,8 +2183,10 @@ def register_workflow_tools(
         elif slide_type == "chart":
             chart_data = slide_spec.get("chart_data") or {}
             categories = chart_data.get("categories") or ["Q1", "Q2", "Q3"]
-            series = chart_data.get("series") or [{"name": "Series 1", "values": [1, 2, 3]}]
-            series_names = [item.get("name", f"Series {idx + 1}") for idx, item in enumerate(series)]
+            series = chart_data.get("series") or [
+                {"name": "Series 1", "values": [1, 2, 3]}]
+            series_names = [
+                item.get("name", f"Series {idx + 1}") for idx, item in enumerate(series)]
             series_values = [item.get("values", []) for item in series]
             ppt_utils.add_chart(
                 slide,
@@ -1787,19 +2202,25 @@ def register_workflow_tools(
             rendered_using = "mixed"
 
         elif slide_type == "timeline":
-            milestones = slide_spec.get("milestones") or slide_spec.get("items") or []
+            milestones = slide_spec.get(
+                "milestones") or slide_spec.get("items") or []
             y = 2.1
             for index, item in enumerate(milestones[:5]):
-                label = item if isinstance(item, str) else item.get("label", f"Milestone {index + 1}")
-                detail = "" if isinstance(item, str) else item.get("detail", "")
-                ppt_utils.add_textbox(slide, 0.8, y, 8.0, 0.6, f"{index + 1}. {label}", font_size=16, bold=True)
+                label = item if isinstance(item, str) else item.get(
+                    "label", f"Milestone {index + 1}")
+                detail = "" if isinstance(
+                    item, str) else item.get("detail", "")
+                ppt_utils.add_textbox(
+                    slide, 0.8, y, 8.0, 0.6, f"{index + 1}. {label}", font_size=16, bold=True)
                 if detail:
-                    ppt_utils.add_textbox(slide, 1.2, y + 0.4, 7.4, 0.5, detail, font_size=12)
+                    ppt_utils.add_textbox(
+                        slide, 1.2, y + 0.4, 7.4, 0.5, detail, font_size=12)
                 y += 1.0
             rendered_using = "dynamic_content"
 
         else:
-            body_text = slide_spec.get("content") or slide_spec.get("text") or slide_spec.get("notes") or ""
+            body_text = slide_spec.get("content") or slide_spec.get(
+                "text") or slide_spec.get("notes") or ""
             if body_text:
                 body_placeholders = find_body_placeholders(slide)
                 body_placeholder = body_placeholders[0] if body_placeholders else None
@@ -1807,7 +2228,8 @@ def register_workflow_tools(
                     clear_text_frame(body_placeholder.text_frame)
                     body_placeholder.text = str(body_text)
                 else:
-                    ppt_utils.add_textbox(slide, 0.8, 1.8, 8.2, 4.0, str(body_text), font_size=16)
+                    ppt_utils.add_textbox(
+                        slide, 0.8, 1.8, 8.2, 4.0, str(body_text), font_size=16)
                     rendered_using = "dynamic_content"
 
         clear_slide_prompt_text(slide)
@@ -1965,21 +2387,24 @@ def register_workflow_tools(
             score += 1.0 if area / slide_area > 0.015 else 0.0
             score += 1.0 if center_y < slide_height * 0.55 else 0.0
             score += 0.5 if len(text) <= 40 else -0.5
-            score += 1.0 if any(token in normalized for token in ["标题", "title", "目录", "content"]) else 0.0
+            score += 1.0 if any(token in normalized for token in [
+                                "标题", "title", "目录", "content"]) else 0.0
 
         elif role == "subtitle":
             score += 2.0 if placeholder_role_name == "subtitle" else 0.0
             score += 1.0 if 10 <= font_size <= 24 else 0.0
             score += 1.0 if slide_height * 0.25 <= center_y <= slide_height * 0.75 else 0.0
             score += 0.7 if 10 <= len(text) <= 80 else 0.0
-            score += 0.8 if any(token in normalized for token in ["subtitle", "minimal", "template", "阐述", "说明"]) else 0.0
+            score += 0.8 if any(token in normalized for token in [
+                                "subtitle", "minimal", "template", "阐述", "说明"]) else 0.0
 
         elif role == "body":
             score += 2.0 if placeholder_role_name == "body" else 0.0
             score += 1.5 if area / slide_area > 0.02 else 0.0
             score += 1.0 if center_y > slide_height * 0.25 else 0.0
             score += 1.0 if len(text) >= 10 else 0.0
-            score += 1.0 if any(token in normalized for token in ["添加文字", "阐述", "说明", "content"]) else 0.0
+            score += 1.0 if any(token in normalized for token in [
+                                "添加文字", "阐述", "说明", "content"]) else 0.0
 
         elif role == "agenda_item":
             score += 1.2 if re.fullmatch(r"\d{1,2}", text.strip()) else 0.0
@@ -1988,15 +2413,18 @@ def register_workflow_tools(
             score += 0.5 if center_x < slide_width * 0.85 else 0.0
 
         elif role == "clear":
-            score += 2.0 if any(token in normalized for token in ["20xx", "http", "免费网", "汇报人"]) else 0.0
+            score += 2.0 if any(token in normalized for token in [
+                                "20xx", "http", "免费网", "汇报人"]) else 0.0
             score += 1.5 if normalized.startswith("part") else 0.0
-            score += 1.6 if normalized in {"content", "addpagetitlecontent"} else 0.0
+            score += 1.6 if normalized in {"content",
+                                           "addpagetitlecontent"} else 0.0
             score += 1.0 if is_prompt_text(text) else 0.0
 
         return round(score, 3)
 
     def role_candidates_for_slide(slide_summary: Dict[str, Any], slide_width: int, slide_height: int) -> Dict[str, Any]:
-        shapes = [shape for shape in slide_summary["shapes"] if is_textual_shape_summary(shape)]
+        shapes = [shape for shape in slide_summary["shapes"]
+                  if is_textual_shape_summary(shape)]
         roles = ["title", "subtitle", "body", "agenda_item", "clear"]
         candidates: Dict[str, Any] = {}
 
@@ -2025,7 +2453,8 @@ def register_workflow_tools(
     def infer_slide_role(slide_summary: Dict[str, Any], candidates: Dict[str, Any]) -> str:
         index = slide_summary["slide_index"]
         layout_name = slide_summary.get("layout_name", "")
-        texts = " ".join((shape.get("text") or "") for shape in slide_summary.get("shapes", []))
+        texts = " ".join((shape.get("text") or "")
+                         for shape in slide_summary.get("shapes", []))
         normalized = normalize_text(layout_name + " " + texts)
 
         if index == 0 or "封面" in normalized or "标题幻灯片" in layout_name:
@@ -2055,36 +2484,49 @@ def register_workflow_tools(
                 role = f"{role}_{slide_summary['slide_index'] + 1}"
             used_roles.add(role)
 
-            title_candidate = (candidates.get("title") or candidates.get("body") or [{}])[0]
-            subtitle_candidate = (candidates.get("subtitle") or candidates.get("body") or [{}])[0]
-            body_candidate = (candidates.get("body") or candidates.get("subtitle") or [{}])[0]
-            clear_shapes = [item["shape_index"] for item in candidates.get("clear", []) if item.get("score", 0) >= 1.5]
+            title_candidate = (candidates.get("title")
+                               or candidates.get("body") or [{}])[0]
+            subtitle_candidate = (candidates.get(
+                "subtitle") or candidates.get("body") or [{}])[0]
+            body_candidate = (candidates.get("body")
+                              or candidates.get("subtitle") or [{}])[0]
+            clear_shapes = [item["shape_index"] for item in candidates.get(
+                "clear", []) if item.get("score", 0) >= 1.5]
 
             fields: Dict[str, Any] = {}
             if role in ("cover", "closing"):
                 if "shape_index" in title_candidate:
-                    fields["title"] = {"shape_index": title_candidate["shape_index"], "max_chars": 28}
+                    fields["title"] = {
+                        "shape_index": title_candidate["shape_index"], "max_chars": 28}
                 if "shape_index" in subtitle_candidate and subtitle_candidate["shape_index"] != fields.get("title", {}).get("shape_index"):
-                    fields["subtitle"] = {"shape_index": subtitle_candidate["shape_index"], "max_chars": 56}
+                    fields["subtitle"] = {
+                        "shape_index": subtitle_candidate["shape_index"], "max_chars": 56}
             elif role == "agenda":
                 title_options = candidates.get("title") or []
-                agenda_title = next((item for item in title_options if "目录" in item.get("text", "")), title_candidate)
+                agenda_title = next(
+                    (item for item in title_options if "目录" in item.get("text", "")), title_candidate)
                 if "shape_index" in agenda_title:
-                    fields["title"] = {"shape_index": agenda_title["shape_index"], "default": "目录"}
-                item_candidates = candidates.get("agenda_item") or candidates.get("body") or []
+                    fields["title"] = {
+                        "shape_index": agenda_title["shape_index"], "default": "目录"}
+                item_candidates = candidates.get(
+                    "agenda_item") or candidates.get("body") or []
                 fields["items"] = [
                     {"shape_index": item["shape_index"], "max_chars": 12}
                     for item in item_candidates[:4]
                 ]
             elif role == "section":
                 if "shape_index" in title_candidate:
-                    fields["title"] = {"shape_index": title_candidate["shape_index"], "max_chars": 18}
+                    fields["title"] = {
+                        "shape_index": title_candidate["shape_index"], "max_chars": 18}
                 if "shape_index" in body_candidate:
-                    fields["body"] = {"shape_index": body_candidate["shape_index"], "max_chars": 90}
+                    fields["body"] = {
+                        "shape_index": body_candidate["shape_index"], "max_chars": 90}
             else:
                 if "shape_index" in title_candidate:
-                    fields["title"] = {"shape_index": title_candidate["shape_index"], "max_chars": 18}
-                item_candidates = candidates.get("body") or candidates.get("agenda_item") or []
+                    fields["title"] = {
+                        "shape_index": title_candidate["shape_index"], "max_chars": 18}
+                item_candidates = candidates.get(
+                    "body") or candidates.get("agenda_item") or []
                 fields["items"] = [
                     {"shape_index": item["shape_index"], "max_chars": 18}
                     for item in item_candidates[:4]
@@ -2098,7 +2540,8 @@ def register_workflow_tools(
                     for item in field_spec:
                         if isinstance(item, dict) and isinstance(item.get("shape_index"), int):
                             used_shape_indices.add(item["shape_index"])
-            clear_shapes = [shape_index for shape_index in clear_shapes if shape_index not in used_shape_indices]
+            clear_shapes = [
+                shape_index for shape_index in clear_shapes if shape_index not in used_shape_indices]
 
             draft["slides"][role] = {
                 "source_slide_index": slide_summary["slide_index"],
@@ -2114,7 +2557,8 @@ def register_workflow_tools(
             return template_path, None
 
         template_name = profile.get("template_name", "")
-        resolved_path, resolution = resolve_template_reference({"template_name": template_name})
+        resolved_path, resolution = resolve_template_reference(
+            {"template_name": template_name})
         if resolved_path:
             return resolved_path, None
         return None, resolution.get("error", f"Template not found: {template_name}")
@@ -2185,7 +2629,8 @@ def register_workflow_tools(
 
         if isinstance(field_spec, dict):
             shape_index = field_spec.get("shape_index")
-            value = get_field_value(content, slide_content, field_name, field_spec.get("default", ""))
+            value = get_field_value(
+                content, slide_content, field_name, field_spec.get("default", ""))
             max_chars = field_spec.get("max_chars")
             if isinstance(value, str) and isinstance(max_chars, int) and max_chars > 0:
                 value = value[:max_chars]
@@ -2209,7 +2654,8 @@ def register_workflow_tools(
                     shape_index = item_spec.get("shape_index")
                     max_chars = item_spec.get("max_chars")
                 else:
-                    writes.append({"field": field_name, "item_index": index, "error": "invalid field item spec"})
+                    writes.append(
+                        {"field": field_name, "item_index": index, "error": "invalid field item spec"})
                     continue
 
                 value = values[index] if index < len(values) else ""
@@ -2218,10 +2664,13 @@ def register_workflow_tools(
                 if isinstance(shape_index, int) and 0 <= shape_index < len(slide.shapes):
                     set_shape_text(slide.shapes[shape_index], str(value))
                     if isinstance(item_spec, dict):
-                        apply_field_format(slide.shapes[shape_index], item_spec)
-                    writes.append({"field": field_name, "item_index": index, "shape_index": shape_index, "value": value})
+                        apply_field_format(
+                            slide.shapes[shape_index], item_spec)
+                    writes.append({"field": field_name, "item_index": index,
+                                  "shape_index": shape_index, "value": value})
                 else:
-                    writes.append({"field": field_name, "item_index": index, "shape_index": shape_index, "error": "shape_index out of range"})
+                    writes.append({"field": field_name, "item_index": index,
+                                  "shape_index": shape_index, "error": "shape_index out of range"})
             return {"field": field_name, "items": writes}
 
         return {"field": field_name, "error": "unsupported field spec"}
@@ -2282,7 +2731,17 @@ def register_workflow_tools(
                 "closing",
             ],
             "academic_recommended_theme": "academic_burgundy",
-            "usage_hint": "Choose one theme for the deck, then set slides[].type to a layout_id and fill the listed fields before calling generate_presentation.",
+            "common_slide_fields": ["type", "title", "points", "source_note"],
+            "compatible_content_fields": ["evidence", "explanation", "analysis", "result", "conclusion", "mechanism", "boundary"],
+            "compatible_source_fields": ["source_refs", "source", "source_text", "citation", "reference"],
+            "auto_split_rules": {
+                "table": "Split table rows into multiple slides when rows exceed 6.",
+                "literature_matrix": "Split literature/studies/items into multiple slides when rows exceed 6.",
+                "cards": "Split items/sections into multiple slides when item count exceeds 6.",
+                "findings": "Split findings into multiple slides when finding count exceeds 4, and split long finding points into continuation cards.",
+                "contribution_limitations": "Split contributions, limitations, and future directions into multiple slides when each group exceeds 3 items.",
+            },
+            "usage_hint": "Choose one theme for the deck, then set slides[].type to a layout_id. Prefer simple slide fields: type, title, points, and source_note. The generator also accepts evidence/explanation/source_refs and normalizes them internally.",
         }
 
     @app.tool(
@@ -2339,6 +2798,7 @@ def register_workflow_tools(
             auto_closing,
             normalized_style,
         )
+        slide_specs = expand_capacity_slide_specs(slide_specs)
 
         rendered_slide_types = []
         warnings: List[str] = []
@@ -2349,8 +2809,10 @@ def register_workflow_tools(
             if index == 0:
                 slide_spec.setdefault("title", title)
                 slide_spec.setdefault("subtitle", subtitle)
-            slide_density = (slide_spec.get("density") or density or "standard").strip().lower()
-            slide_overflow = (slide_spec.get("overflow") or overflow or "shrink_then_truncate").strip().lower()
+            slide_density = (slide_spec.get("density")
+                             or density or "standard").strip().lower()
+            slide_overflow = (slide_spec.get(
+                "overflow") or overflow or "shrink_then_truncate").strip().lower()
             rendered_slide_types.append(
                 render_generated_slide(
                     presentation,
@@ -2421,13 +2883,16 @@ def register_workflow_tools(
         templates = []
 
         for template_path in template_files:
-            template_summary = summarize_template_file(template_path, include_layouts, include_placeholders)
+            template_summary = summarize_template_file(
+                template_path, include_layouts, include_placeholders)
             haystack = normalize_text(
                 " ".join([
                     template_summary["template_name"],
                     " ".join(template_summary.get("style_tags", [])),
-                    template_summary.get("core_properties", {}).get("title") or "",
-                    template_summary.get("core_properties", {}).get("subject") or "",
+                    template_summary.get(
+                        "core_properties", {}).get("title") or "",
+                    template_summary.get(
+                        "core_properties", {}).get("subject") or "",
                 ])
             )
             if query and query not in haystack:
@@ -2603,11 +3068,13 @@ def register_workflow_tools(
             return {"error": template_error}
 
         try:
-            presentation = ppt_utils.create_presentation_from_template(template_path)
+            presentation = ppt_utils.create_presentation_from_template(
+                template_path)
             mapping = profile.get("mapping", {})
             slide_mappings = mapping.get("slides", {})
             if slide_roles:
-                missing_roles = [role for role in slide_roles if role not in slide_mappings]
+                missing_roles = [
+                    role for role in slide_roles if role not in slide_mappings]
                 if missing_roles:
                     return {
                         "error": f"Template profile does not define requested slide roles: {missing_roles}",
@@ -2627,7 +3094,8 @@ def register_workflow_tools(
             if require_content:
                 for slide_role, slide_mapping in selected_slide_mappings.items():
                     slide_content = get_profile_content(content, slide_role)
-                    missing_fields = missing_profile_fields(slide_mapping, content, slide_content)
+                    missing_fields = missing_profile_fields(
+                        slide_mapping, content, slide_content)
                     if missing_fields:
                         missing_content.append({
                             "slide_role": slide_role,
@@ -2662,7 +3130,8 @@ def register_workflow_tools(
                 fields = slide_mapping.get("fields", {})
                 writes = []
                 for field_name, field_spec in fields.items():
-                    writes.append(write_profile_field(slide, field_name, field_spec, content, slide_content))
+                    writes.append(write_profile_field(
+                        slide, field_name, field_spec, content, slide_content))
 
                 if slide_mapping.get("clear_prompt_text", True):
                     clear_slide_prompt_text(slide)
@@ -2676,10 +3145,12 @@ def register_workflow_tools(
 
             removed_slides = 0
             if not keep_unmapped_slides:
-                removed_slides = remove_unprofiled_slides(presentation, used_slide_indices)
+                removed_slides = remove_unprofiled_slides(
+                    presentation, used_slide_indices)
 
             effective_presentation_id = presentation_id or f"profile_{slugify(profile_name)}"
-            effective_output_name = output_name or content.get("output_name") or f"{effective_presentation_id}.pptx"
+            effective_output_name = output_name or content.get(
+                "output_name") or f"{effective_presentation_id}.pptx"
             presentations[effective_presentation_id] = presentation
             projects[effective_presentation_id] = {
                 "title": content.get("title", profile_name),
@@ -2718,14 +3189,16 @@ def register_workflow_tools(
         """Create a new template-aware presentation project."""
         template = template or {}
         presentation_id = presentation_id or f"proj_{slugify(title)}"
-        resolved_template_path, resolution = resolve_template_reference(template)
+        resolved_template_path, resolution = resolve_template_reference(
+            template)
 
         if resolution.get("error"):
             return resolution
 
         try:
             if resolved_template_path:
-                presentation = ppt_utils.create_presentation_from_template(resolved_template_path)
+                presentation = ppt_utils.create_presentation_from_template(
+                    resolved_template_path)
             else:
                 presentation = ppt_utils.create_presentation()
 
@@ -2804,7 +3277,8 @@ def register_workflow_tools(
                 slide["preferred_layout"] = summarize_layout(
                     layout,
                     layout_index,
-                    include_placeholders=template_context.get("prefer_detected_layout_mapping", True),
+                    include_placeholders=template_context.get(
+                        "prefer_detected_layout_mapping", True),
                 )
                 slide["placeholder_map"] = layout_placeholder_map(layout)
 
@@ -2841,12 +3315,14 @@ def register_workflow_tools(
 
         presentation = presentations[presentation_id]
         template_rendering = template_rendering or {}
-        outline = outline or projects.get(presentation_id, {}).get("outline") or []
+        outline = outline or projects.get(
+            presentation_id, {}).get("outline") or []
 
         if not outline:
             return {"error": "No outline provided. Use plan_presentation first or pass outline directly."}
 
-        require_planned_outline = template_rendering.get("require_planned_outline", True)
+        require_planned_outline = template_rendering.get(
+            "require_planned_outline", True)
         if require_planned_outline and any("preferred_layout" not in slide for slide in outline):
             return {
                 "error": "Build requires a planned outline with preferred_layout metadata. Call plan_presentation first, then pass its outline into build_presentation."
@@ -2857,7 +3333,8 @@ def register_workflow_tools(
         removed_slides = 0
         project = projects.get(presentation_id, {})
         existing_template_slide_count = project.get("template_slide_count", 0)
-        reuse_existing_template_slides = template_rendering.get("use_template_sample_slides", True) and existing_template_slide_count > 0
+        reuse_existing_template_slides = template_rendering.get(
+            "use_template_sample_slides", True) and existing_template_slide_count > 0
         if reset_existing_slides and not reuse_existing_template_slides:
             removed_slides = clear_all_slides(presentation)
 
@@ -2866,20 +3343,25 @@ def register_workflow_tools(
         build_results = []
         warnings: List[str] = []
         for slide_position, slide_spec in enumerate(merged_outline):
-            result = render_slide_from_spec(presentation, slide_spec, template_rendering, slide_position)
+            result = render_slide_from_spec(
+                presentation, slide_spec, template_rendering, slide_position)
             build_results.append(result)
             warnings.extend(result["warnings"])
 
         removed_template_tail_slides = 0
         if reuse_existing_template_slides and len(presentation.slides) > len(merged_outline):
-            removed_template_tail_slides = remove_slides_from(presentation, len(merged_outline))
+            removed_template_tail_slides = remove_slides_from(
+                presentation, len(merged_outline))
 
         projects.setdefault(presentation_id, {})
         projects[presentation_id]["outline"] = merged_outline
 
-        strong_template_slides = len([item for item in build_results if item["rendered_using"] == "template_layout"])
-        mixed_slides = len([item for item in build_results if item["rendered_using"] == "mixed"])
-        dynamic_slides = len([item for item in build_results if item["rendered_using"] == "dynamic_content"])
+        strong_template_slides = len(
+            [item for item in build_results if item["rendered_using"] == "template_layout"])
+        mixed_slides = len(
+            [item for item in build_results if item["rendered_using"] == "mixed"])
+        dynamic_slides = len(
+            [item for item in build_results if item["rendered_using"] == "dynamic_content"])
 
         return {
             "presentation_id": presentation_id,
@@ -2925,10 +3407,13 @@ def register_workflow_tools(
                 slide_no = int(matched.group(1))
                 if 1 <= slide_no <= len(presentation.slides):
                     slide = presentation.slides[slide_no - 1]
-                    fill_title_placeholders(slide, title=matched.group(2).strip())
-                    applied_changes.append({"type": "rename_title", "slide_no": slide_no})
+                    fill_title_placeholders(
+                        slide, title=matched.group(2).strip())
+                    applied_changes.append(
+                        {"type": "rename_title", "slide_no": slide_no})
                     continue
-                warnings.append(f"Instruction skipped because slide {slide_no} does not exist: {instruction}")
+                warnings.append(
+                    f"Instruction skipped because slide {slide_no} does not exist: {instruction}")
                 continue
 
             matched = re.match(r"删除第\s*(\d+)\s*页", instruction)
@@ -2939,9 +3424,11 @@ def register_workflow_tools(
                     relationship_id = slide_id.rId
                     presentation.part.drop_rel(relationship_id)
                     presentation.slides._sldIdLst.remove(slide_id)
-                    applied_changes.append({"type": "delete_slide", "slide_no": slide_no})
+                    applied_changes.append(
+                        {"type": "delete_slide", "slide_no": slide_no})
                     continue
-                warnings.append(f"Instruction skipped because slide {slide_no} does not exist: {instruction}")
+                warnings.append(
+                    f"Instruction skipped because slide {slide_no} does not exist: {instruction}")
                 continue
 
             matched = re.match(r"整体字体改为[:：]?\s*(.+)", instruction)
@@ -2950,28 +3437,36 @@ def register_workflow_tools(
                 for slide in presentation.slides:
                     for shape in slide.shapes:
                         if hasattr(shape, "text_frame") and shape.text_frame:
-                            ppt_utils.format_text_advanced(shape.text_frame, font_name=font_name)
-                applied_changes.append({"type": "global_font", "font_name": font_name})
+                            ppt_utils.format_text_advanced(
+                                shape.text_frame, font_name=font_name)
+                applied_changes.append(
+                    {"type": "global_font", "font_name": font_name})
                 continue
 
-            warnings.append(f"Instruction not recognized and was skipped: {instruction}")
+            warnings.append(
+                f"Instruction not recognized and was skipped: {instruction}")
 
         for change in changes:
             slide_no = change.get("slide_no")
             if not isinstance(slide_no, int) or not (1 <= slide_no <= len(presentation.slides)):
-                warnings.append(f"Structured change skipped due to invalid slide_no: {change}")
+                warnings.append(
+                    f"Structured change skipped due to invalid slide_no: {change}")
                 continue
 
             slide = presentation.slides[slide_no - 1]
             if change.get("action") == "set_title":
                 fill_title_placeholders(slide, title=change.get("title", ""))
-                applied_changes.append({"type": "set_title", "slide_no": slide_no})
+                applied_changes.append(
+                    {"type": "set_title", "slide_no": slide_no})
             elif change.get("action") == "set_notes":
                 notes = change.get("text", "")
-                ppt_utils.add_textbox(slide, 0.8, 6.6, 8.0, 0.4, notes, font_size=10)
-                applied_changes.append({"type": "set_notes", "slide_no": slide_no})
+                ppt_utils.add_textbox(
+                    slide, 0.8, 6.6, 8.0, 0.4, notes, font_size=10)
+                applied_changes.append(
+                    {"type": "set_notes", "slide_no": slide_no})
             else:
-                warnings.append(f"Structured change action is not supported yet: {change.get('action')}")
+                warnings.append(
+                    f"Structured change action is not supported yet: {change.get('action')}")
 
         return {
             "presentation_id": presentation_id,
@@ -3004,13 +3499,15 @@ def register_workflow_tools(
         )
         os.makedirs(export_directory, exist_ok=True)
 
-        effective_file_name = file_name or project.get("output_name") or f"{presentation_id}.pptx"
+        effective_file_name = file_name or project.get(
+            "output_name") or f"{presentation_id}.pptx"
         if not effective_file_name.lower().endswith(".pptx"):
             effective_file_name = f"{effective_file_name}.pptx"
 
         file_path = os.path.join(export_directory, effective_file_name)
         try:
-            ppt_utils.save_presentation(presentations[presentation_id], file_path)
+            ppt_utils.save_presentation(
+                presentations[presentation_id], file_path)
         except PermissionError:
             return {
                 "error": f"Cannot save presentation because the target file is locked or not writable: {file_path}",

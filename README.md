@@ -156,6 +156,14 @@ instead of inferred from template placeholders.
 `list_presentation_options` returns both direct-generation themes and available slide layouts.
 Call it before generation when an LLM needs to choose a visual theme or inspect
 the `slides[].type` values and fields supported by `generate_presentation`.
+For source-grounded document generation, prefer simple slide fields:
+`type`, `title`, `points`, and `source_note`. The generator also accepts
+compatibility fields such as `evidence`, `explanation`, `analysis`,
+`result`, `conclusion`, `source_refs`, and `citation`, then normalizes them
+internally. Do not pass `null`; use `""`, `[]`, or `{}` for empty values.
+Before rendering, the generator automatically splits over-capacity content:
+tables and literature matrices over 6 rows, cards over 6 items, findings over
+4 findings, and contribution/limitation/future groups over 3 items.
 
 Built-in direct-generation themes:
 
