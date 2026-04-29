@@ -145,13 +145,24 @@ python ppt_mcp_server.py
 
 By default, the server exposes only the direct generation tools:
 
-- `list_themes`
+- `list_presentation_options`
 - `generate_presentation`
 - `export_presentation`
 
 This mode does not depend on a PPT template. It creates slides directly with
 `python-pptx`, so content placement and font sizes are controlled by the tool
 instead of inferred from template placeholders.
+
+`list_presentation_options` returns both direct-generation themes and available slide layouts.
+Call it before generation when an LLM needs to choose a visual theme or inspect
+the `slides[].type` values and fields supported by `generate_presentation`.
+
+Built-in direct-generation themes:
+
+- `business_blue`: clean corporate style for proposals, reports, and data platform decks.
+- `modern_green`: restrained green style for transformation, sustainability, and operations.
+- `executive_gray`: neutral executive style for concise management communication.
+- `academic_burgundy`: restrained academic style for social-science talks, thesis defenses, and research seminars.
 
 `generate_presentation` supports a general content model and can infer slide
 types when `type` is omitted:
@@ -163,6 +174,21 @@ types when `type` is omitted:
 - `layers` -> `architecture`
 - `table` -> `table`
 - `statement` -> `quote`
+- `questions` / `research_questions` -> `research_questions`
+- `literature` / `studies` -> `literature_matrix`
+- `framework` / `concepts` / `variables` -> `theoretical_framework`
+- `methods` / `data_sources` / `research_design` -> `method_design`
+- `findings` -> `findings`
+- `contributions` / `limitations` -> `contribution_limitations`
+
+Academic and social-science decks can use these dedicated slide types:
+
+- `literature_matrix`: literature stream, main argument, research gap, and this study's entry point.
+- `research_questions`: research context, 1-4 research questions, and optional research gap.
+- `theoretical_framework`: concepts or variables, relations/propositions, and mechanism explanation.
+- `method_design`: data sources, sample scope, variables, and analysis methods.
+- `findings`: concise empirical or analytical findings with supporting points.
+- `contribution_limitations`: research contributions, limitations, and future directions.
 
 Use `density` (`spacious`, `standard`, `compact`) and `overflow`
 (`shrink_then_truncate`, `warn`) to control content capacity and font fitting.

@@ -101,7 +101,179 @@ def register_workflow_tools(
                     "success": (68, 132, 94),
                 },
             },
+            "academic_burgundy": {
+                "name": "Academic Burgundy",
+                "description": "Restrained academic style for social-science talks, thesis defenses, and research seminars.",
+                "font_name": "Microsoft YaHei",
+                "colors": {
+                    "background": (250, 250, 248),
+                    "surface": (255, 255, 255),
+                    "primary": (36, 42, 53),
+                    "secondary": (82, 88, 99),
+                    "accent": (136, 46, 67),
+                    "muted": (116, 119, 126),
+                    "line": (224, 224, 220),
+                    "light": (242, 238, 242),
+                    "danger": (170, 70, 78),
+                    "success": (54, 125, 118),
+                },
+            },
         }
+
+    def get_builtin_layouts() -> List[Dict[str, Any]]:
+        return [
+            {
+                "layout_id": "cover",
+                "name": "Cover",
+                "description": "Opening slide with title, subtitle, and deck tag.",
+                "use_when": "Use for the first page of a deck.",
+                "required_fields": ["title"],
+                "optional_fields": ["subtitle", "content", "tag"],
+            },
+            {
+                "layout_id": "summary",
+                "name": "Summary",
+                "description": "Overview slide with a statement and up to four structured sections.",
+                "use_when": "Use for agenda, chapter overview, executive summary, or final summary.",
+                "required_fields": ["title"],
+                "optional_fields": ["statement", "subtitle", "sections", "items", "content", "text"],
+                "auto_infer_from": ["items", "sections"],
+            },
+            {
+                "layout_id": "cards",
+                "name": "Cards",
+                "description": "Card grid for multiple concepts, modules, capabilities, or arguments.",
+                "use_when": "Use when the slide has 2-6 peer items.",
+                "required_fields": ["title", "items"],
+                "optional_fields": ["sections", "density"],
+                "auto_infer_from": ["items", "sections"],
+            },
+            {
+                "layout_id": "comparison",
+                "name": "Comparison",
+                "description": "Two-column comparison for current state versus target state, or before versus after.",
+                "use_when": "Use for contrasts, debates, alternatives, and problem-solution pages.",
+                "required_fields": ["title"],
+                "optional_fields": ["left", "right", "comparisons"],
+                "auto_infer_from": ["left", "right", "comparisons"],
+            },
+            {
+                "layout_id": "process",
+                "name": "Process",
+                "description": "Horizontal process with up to four steps.",
+                "use_when": "Use for method flow, implementation path, or logical sequence.",
+                "required_fields": ["title", "steps"],
+                "optional_fields": ["items", "sections"],
+                "auto_infer_from": ["steps"],
+            },
+            {
+                "layout_id": "timeline",
+                "name": "Timeline",
+                "description": "Timeline view for phased plans, research stages, or historical evolution.",
+                "use_when": "Use when steps have phases or more than four sequential items.",
+                "required_fields": ["title", "steps"],
+                "optional_fields": ["items"],
+                "auto_infer_from": ["steps"],
+            },
+            {
+                "layout_id": "metrics",
+                "name": "Metrics",
+                "description": "Metric cards for quantified indicators, sample statistics, or key numbers.",
+                "use_when": "Use only when the input includes concrete numbers or indicators.",
+                "required_fields": ["title", "metrics"],
+                "optional_fields": ["items"],
+                "auto_infer_from": ["metrics"],
+            },
+            {
+                "layout_id": "architecture",
+                "name": "Architecture",
+                "description": "Layered structure for systems, governance structures, or analytical levels.",
+                "use_when": "Use for multi-layer frameworks and component relationships.",
+                "required_fields": ["title", "layers"],
+                "optional_fields": ["items", "relations"],
+                "auto_infer_from": ["layers", "relations"],
+            },
+            {
+                "layout_id": "table",
+                "name": "Table",
+                "description": "Structured table with headers and rows.",
+                "use_when": "Use for variables, samples, coding schemes, literature details, and comparisons.",
+                "required_fields": ["title", "table"],
+                "optional_fields": ["table.headers", "table.rows"],
+                "auto_infer_from": ["table"],
+            },
+            {
+                "layout_id": "quote",
+                "name": "Quote",
+                "description": "Large conclusion or core argument with optional supporting points.",
+                "use_when": "Use for thesis statement, key conclusion, or central claim.",
+                "required_fields": ["title", "statement"],
+                "optional_fields": ["content", "points", "items"],
+                "auto_infer_from": ["statement"],
+            },
+            {
+                "layout_id": "closing",
+                "name": "Closing",
+                "description": "Final thank-you slide.",
+                "use_when": "Use for the last page.",
+                "required_fields": ["title"],
+                "optional_fields": ["subtitle", "content"],
+            },
+            {
+                "layout_id": "research_questions",
+                "name": "Research Questions",
+                "description": "Academic research question slide with context, questions, and optional research gap.",
+                "use_when": "Use for opening the research logic in social-science talks.",
+                "required_fields": ["title", "questions"],
+                "optional_fields": ["background", "context", "statement", "gap", "research_gap"],
+                "auto_infer_from": ["questions", "research_questions"],
+            },
+            {
+                "layout_id": "literature_matrix",
+                "name": "Literature Matrix",
+                "description": "Literature review matrix covering research stream, main argument, gap, and this study's entry point.",
+                "use_when": "Use for literature review and positioning pages.",
+                "required_fields": ["title", "literature"],
+                "optional_fields": ["studies", "items", "table.headers", "table.rows"],
+                "auto_infer_from": ["literature", "studies"],
+            },
+            {
+                "layout_id": "theoretical_framework",
+                "name": "Theoretical Framework",
+                "description": "Concept or variable relationship page with propositions and mechanism explanation.",
+                "use_when": "Use for theory, hypotheses, analytical framework, and mechanism pages.",
+                "required_fields": ["title", "concepts"],
+                "optional_fields": ["framework", "variables", "relations", "propositions", "hypotheses", "mechanism", "explanation"],
+                "auto_infer_from": ["framework", "concepts", "variables"],
+            },
+            {
+                "layout_id": "method_design",
+                "name": "Method Design",
+                "description": "Research design page covering data, sample, variables, and analysis methods.",
+                "use_when": "Use for data and method sections in academic reports.",
+                "required_fields": ["title"],
+                "optional_fields": ["methods", "research_design", "data_sources", "sample", "variables", "analysis", "method"],
+                "auto_infer_from": ["methods", "data_sources", "research_design"],
+            },
+            {
+                "layout_id": "findings",
+                "name": "Findings",
+                "description": "Main findings page with concise claims and supporting evidence.",
+                "use_when": "Use for empirical findings, analysis results, or case observations.",
+                "required_fields": ["title", "findings"],
+                "optional_fields": ["headline", "statement", "items", "sections"],
+                "auto_infer_from": ["findings"],
+            },
+            {
+                "layout_id": "contribution_limitations",
+                "name": "Contribution And Limitations",
+                "description": "Academic contribution, limitations, and future research directions.",
+                "use_when": "Use near the end of a research presentation.",
+                "required_fields": ["title"],
+                "optional_fields": ["contributions", "limitations", "implications", "future", "outlook"],
+                "auto_infer_from": ["contributions", "limitations"],
+            },
+        ]
 
     def get_theme(theme_id: str) -> Tuple[str, Dict[str, Any]]:
         themes = get_builtin_themes()
@@ -176,12 +348,21 @@ def register_workflow_tools(
             for item in values:
                 if isinstance(item, dict):
                     text = item.get("text") or item.get("title") or item.get("label") or item.get("name") or ""
-                    detail = item.get("detail") or item.get("description") or ""
+                    detail = item.get("detail") or item.get("description") or item.get("content") or ""
                     lines.append(f"{text}: {detail}" if detail else str(text))
                 else:
                     lines.append(str(item))
             return [line.strip() for line in lines if line and line.strip()][:limit]
         return [str(values)][:limit]
+
+    def split_label_detail(value: Any) -> Tuple[str, str]:
+        text = str(value or "").strip()
+        if not text:
+            return "", ""
+        match = re.match(r"^([^:：]{1,12})[:：]\s*(.+)$", text)
+        if not match:
+            return text, ""
+        return match.group(1).strip(), match.group(2).strip()
 
     def trim_items(items: List[Any], limit: int, warnings: Optional[List[str]], context: str) -> List[Any]:
         if len(items) > limit and warnings is not None:
@@ -452,7 +633,8 @@ def register_workflow_tools(
                         points = [str(description)] + points
                     normalized.append({"title": str(title), "points": points, "raw": item})
                 else:
-                    normalized.append({"title": str(item), "points": [], "raw": item})
+                    title, detail = split_label_detail(item)
+                    normalized.append({"title": title, "points": safe_lines(detail, 6), "raw": item})
         if not normalized:
             normalized.append({
                 "title": slide_spec.get("title") or "核心观点",
@@ -480,8 +662,26 @@ def register_workflow_tools(
                 "roadmap": "process",
                 "end": "closing",
                 "bullet": "summary",
+                "literature": "literature_matrix",
+                "research_question": "research_questions",
+                "framework": "theoretical_framework",
+                "method": "method_design",
+                "finding": "findings",
+                "contribution": "contribution_limitations",
             }
             return aliases.get(explicit, explicit)
+        if slide_spec.get("questions") or slide_spec.get("research_questions"):
+            return "research_questions"
+        if slide_spec.get("literature") or slide_spec.get("studies"):
+            return "literature_matrix"
+        if slide_spec.get("framework") or slide_spec.get("concepts") or slide_spec.get("variables"):
+            return "theoretical_framework"
+        if slide_spec.get("methods") or slide_spec.get("data_sources") or slide_spec.get("research_design"):
+            return "method_design"
+        if slide_spec.get("findings"):
+            return "findings"
+        if slide_spec.get("contributions") or slide_spec.get("limitations"):
+            return "contribution_limitations"
         if slide_spec.get("layers") or slide_spec.get("relations"):
             return "architecture"
         if slide_spec.get("metrics"):
@@ -573,8 +773,24 @@ def register_workflow_tools(
         right = slide_spec.get("right") or {}
         comparisons = slide_spec.get("comparisons") or []
         if comparisons and not (left or right):
-            left = {"title": "对比项", "points": [item.get("before") or item.get("left") or item.get("name") or "" for item in comparisons if isinstance(item, dict)]}
-            right = {"title": "优化后", "points": [item.get("after") or item.get("right") or item.get("result") or "" for item in comparisons if isinstance(item, dict)]}
+            comparison_items = [item for item in comparisons if isinstance(item, dict)]
+            column_items = [
+                item for item in comparison_items
+                if not any(item.get(key) for key in ["before", "after", "left", "right", "result"])
+                and (item.get("title") or item.get("content") or item.get("points"))
+            ]
+            if len(column_items) >= 2 and len(column_items) == len(comparison_items):
+                left = {
+                    "title": column_items[0].get("title") or column_items[0].get("name") or "现状/痛点",
+                    "points": safe_lines(column_items[0].get("points") or column_items[0].get("content") or column_items[0].get("description"), 8),
+                }
+                right = {
+                    "title": column_items[1].get("title") or column_items[1].get("name") or "目标/方案",
+                    "points": safe_lines(column_items[1].get("points") or column_items[1].get("content") or column_items[1].get("description"), 8),
+                }
+            else:
+                left = {"title": "对比项", "points": [item.get("before") or item.get("left") or item.get("name") or item.get("title") or "" for item in comparison_items]}
+                right = {"title": "优化后", "points": [item.get("after") or item.get("right") or item.get("result") or item.get("content") or "" for item in comparison_items]}
         add_card(slide, 0.8, 1.75, 5.65, 4.85, left.get("title") or "现状/痛点", safe_lines(left.get("points") or left.get("content"), 8), theme, "danger", density, overflow, warnings)
         add_card(slide, 6.85, 1.75, 5.65, 4.85, right.get("title") or "目标/方案", safe_lines(right.get("points") or right.get("content"), 8), theme, "success", density, overflow, warnings)
 
@@ -696,6 +912,165 @@ def register_workflow_tools(
                 add_rect(slide, 0.85 + col * col_width, y, col_width, row_height, theme_color(theme, "surface"), theme_color(theme, "line"))
                 add_text(slide, 0.94 + col * col_width, y + 0.13, col_width - 0.18, 0.24, value, theme, 8, "secondary", alignment="center", density=density, overflow=overflow, min_font_size=7, warnings=warnings, context="table cell")
 
+    def render_literature_matrix_slide(
+        presentation,
+        slide_spec: Dict[str, Any],
+        theme: Dict[str, Any],
+        density: str,
+        overflow: str,
+        warnings: List[str],
+    ) -> None:
+        table_spec = slide_spec.get("table") or {}
+        rows = table_spec.get("rows") or slide_spec.get("literature") or slide_spec.get("studies") or slide_spec.get("items") or []
+        headers = table_spec.get("headers") or ["研究脉络", "主要观点", "不足之处", "本研究切入"]
+        normalized_rows = []
+        for row in rows:
+            if isinstance(row, dict):
+                normalized_rows.append([
+                    row.get("theme") or row.get("topic") or row.get("direction") or row.get("title") or "",
+                    row.get("argument") or row.get("view") or row.get("finding") or row.get("main_point") or row.get("观点") or "",
+                    row.get("gap") or row.get("limitation") or row.get("不足") or "",
+                    row.get("entry") or row.get("positioning") or row.get("contribution") or row.get("本研究切入") or "",
+                ])
+            else:
+                normalized_rows.append(safe_lines(row, len(headers)))
+        render_table_slide(
+            presentation,
+            {
+                "title": slide_spec.get("title") or "文献综述：研究脉络与不足",
+                "kicker": slide_spec.get("kicker") or "LITERATURE",
+                "table": {"headers": headers, "rows": normalized_rows},
+            },
+            theme,
+            "compact" if density == "standard" else density,
+            overflow,
+            warnings,
+        )
+
+    def render_research_questions_slide(
+        presentation,
+        slide_spec: Dict[str, Any],
+        theme: Dict[str, Any],
+        density: str,
+        overflow: str,
+        warnings: List[str],
+    ) -> None:
+        slide = make_blank_slide(presentation)
+        add_slide_header(slide, slide_spec.get("title") or "研究问题", theme, slide_spec.get("kicker") or "RESEARCH QUESTIONS")
+        background = slide_spec.get("background") or slide_spec.get("context") or slide_spec.get("statement") or ""
+        if background:
+            add_text(slide, 0.85, 1.48, 11.65, 0.48, background, theme, 11, "secondary", density=density, overflow=overflow, warnings=warnings, context="research question background")
+        questions = trim_items(safe_lines(slide_spec.get("questions") or slide_spec.get("research_questions") or slide_spec.get("items"), 6), 4, warnings, "research questions")
+        top = 2.05
+        for index, question in enumerate(questions):
+            y = top + index * 1.12
+            add_rect(slide, 0.9, y, 0.58, 0.58, theme_color(theme, "accent"), radius=True)
+            add_text(slide, 1.02, y + 0.15, 0.34, 0.22, f"Q{index + 1}", theme, 10, "surface", True, "center")
+            add_rect(slide, 1.65, y, 10.55, 0.62, theme_color(theme, "surface"), theme_color(theme, "line"), True)
+            add_text(slide, 1.9, y + 0.14, 9.95, 0.28, question, theme, 13, "primary", True, density=density, overflow=overflow, warnings=warnings, context="research question")
+        gap = slide_spec.get("gap") or slide_spec.get("research_gap") or ""
+        if gap:
+            add_rect(slide, 0.9, 5.95, 11.3, 0.68, theme_color(theme, "light"), theme_color(theme, "line"), True)
+            add_text(slide, 1.12, 6.12, 1.0, 0.24, "研究缺口", theme, 10, "accent", True, density=density, overflow=overflow, warnings=warnings, context="research gap label")
+            add_text(slide, 2.25, 6.12, 9.62, 0.24, gap, theme, 10, "secondary", density=density, overflow=overflow, warnings=warnings, context="research gap")
+
+    def render_theoretical_framework_slide(
+        presentation,
+        slide_spec: Dict[str, Any],
+        theme: Dict[str, Any],
+        density: str,
+        overflow: str,
+        warnings: List[str],
+    ) -> None:
+        slide = make_blank_slide(presentation)
+        add_slide_header(slide, slide_spec.get("title") or "理论框架", theme, slide_spec.get("kicker") or "FRAMEWORK")
+        concepts = trim_items(normalized_sections({"items": slide_spec.get("concepts") or slide_spec.get("variables") or slide_spec.get("framework") or slide_spec.get("items") or []}), 5, warnings, "framework concepts")
+        if not concepts:
+            concepts = [{"title": "核心概念", "points": safe_lines(slide_spec.get("content"), 4), "raw": {}}]
+        gap = 10.8 / max(len(concepts), 1)
+        y = 2.05
+        for index, concept in enumerate(concepts):
+            left = 0.95 + index * gap
+            width = min(2.0, gap - 0.18)
+            add_rect(slide, left, y, width, 1.12, theme_color(theme, "surface"), theme_color(theme, "line"), True)
+            add_rect(slide, left, y, width, 0.14, theme_color(theme, "accent"))
+            add_text(slide, left + 0.12, y + 0.28, width - 0.24, 0.28, concept["title"], theme, 11, "primary", True, "center", density=density, overflow=overflow, warnings=warnings, context="framework concept")
+            add_text(slide, left + 0.12, y + 0.68, width - 0.24, 0.26, "\n".join(concept["points"][:2]), theme, 8, "secondary", alignment="center", density=density, overflow=overflow, min_font_size=7, warnings=warnings, context="framework concept detail")
+            if index < len(concepts) - 1:
+                add_text(slide, left + width + 0.1, y + 0.43, 0.35, 0.28, ">", theme, 18, "accent", True, "center")
+        propositions = safe_lines(slide_spec.get("relations") or slide_spec.get("propositions") or slide_spec.get("hypotheses"), 4)
+        add_card(slide, 0.95, 4.15, 5.45, 1.78, "关系假设 / 分析命题", propositions, theme, "accent", density, overflow, warnings)
+        mechanism = safe_lines(slide_spec.get("mechanism") or slide_spec.get("explanation"), 4)
+        add_card(slide, 6.75, 4.15, 5.45, 1.78, "机制解释", mechanism, theme, "success", density, overflow, warnings)
+
+    def render_method_design_slide(
+        presentation,
+        slide_spec: Dict[str, Any],
+        theme: Dict[str, Any],
+        density: str,
+        overflow: str,
+        warnings: List[str],
+    ) -> None:
+        slide = make_blank_slide(presentation)
+        add_slide_header(slide, slide_spec.get("title") or "研究设计", theme, slide_spec.get("kicker") or "METHOD")
+        method_items = slide_spec.get("methods") or slide_spec.get("research_design") or slide_spec.get("steps")
+        if not method_items:
+            method_items = [
+                {"title": "数据来源", "points": safe_lines(slide_spec.get("data_sources") or slide_spec.get("data"), 3)},
+                {"title": "样本范围", "points": safe_lines(slide_spec.get("sample") or slide_spec.get("scope"), 3)},
+                {"title": "变量设计", "points": safe_lines(slide_spec.get("variables"), 3)},
+                {"title": "分析方法", "points": safe_lines(slide_spec.get("analysis") or slide_spec.get("method"), 3)},
+            ]
+        steps = trim_items(normalized_sections({"items": method_items}), 4, warnings, "method design steps")
+        positions = [(0.85, 1.72), (6.85, 1.72), (0.85, 4.05), (6.85, 4.05)]
+        labels = ["01", "02", "03", "04"]
+        for index, step in enumerate(steps):
+            left, top = positions[index]
+            add_rect(slide, left, top, 5.2, 1.78, theme_color(theme, "surface"), theme_color(theme, "line"), True)
+            add_rect(slide, left + 0.22, top + 0.22, 0.52, 0.52, theme_color(theme, "primary"), radius=True)
+            add_text(slide, left + 0.31, top + 0.36, 0.34, 0.18, labels[index], theme, 9, "surface", True, "center")
+            add_text(slide, left + 0.9, top + 0.24, 3.95, 0.32, step["title"], theme, 13, "primary", True, density=density, overflow=overflow, warnings=warnings, context="method step title")
+            add_text(slide, left + 0.9, top + 0.78, 3.95, 0.68, "\n".join([f"- {line}" for line in step["points"][:3]]), theme, 9, "secondary", density=density, overflow=overflow, warnings=warnings, context="method step body")
+
+    def render_findings_slide(
+        presentation,
+        slide_spec: Dict[str, Any],
+        theme: Dict[str, Any],
+        density: str,
+        overflow: str,
+        warnings: List[str],
+    ) -> None:
+        slide = make_blank_slide(presentation)
+        add_slide_header(slide, slide_spec.get("title") or "主要发现", theme, slide_spec.get("kicker") or "FINDINGS")
+        findings = trim_items(normalized_sections({"items": slide_spec.get("findings") or slide_spec.get("items") or slide_spec.get("sections") or []}), 4, warnings, "findings")
+        headline = slide_spec.get("headline") or slide_spec.get("statement") or ""
+        if headline:
+            add_rect(slide, 0.9, 1.55, 11.25, 0.88, theme_color(theme, "light"), theme_color(theme, "line"), True)
+            add_text(slide, 1.15, 1.78, 10.75, 0.34, headline, theme, 16, "primary", True, density=density, overflow=overflow, warnings=warnings, context="finding headline")
+        positions = [(0.9, 2.75), (6.85, 2.75), (0.9, 4.78), (6.85, 4.78)] if headline else [(0.9, 1.72), (6.85, 1.72), (0.9, 4.05), (6.85, 4.05)]
+        card_height = 1.42 if headline else 1.78
+        for index, finding in enumerate(findings):
+            left, top = positions[index]
+            add_card(slide, left, top, 5.25, card_height, finding["title"], finding["points"], theme, "accent" if index % 2 == 0 else "success", density, overflow, warnings)
+
+    def render_contribution_limitations_slide(
+        presentation,
+        slide_spec: Dict[str, Any],
+        theme: Dict[str, Any],
+        density: str,
+        overflow: str,
+        warnings: List[str],
+    ) -> None:
+        slide = make_blank_slide(presentation)
+        add_slide_header(slide, slide_spec.get("title") or "研究贡献与局限", theme, slide_spec.get("kicker") or "CONTRIBUTION")
+        contributions = safe_lines(slide_spec.get("contributions") or slide_spec.get("contribution") or slide_spec.get("left") or slide_spec.get("items"), 6)
+        limitations = safe_lines(slide_spec.get("limitations") or slide_spec.get("limitation") or slide_spec.get("right"), 6)
+        implications = safe_lines(slide_spec.get("implications") or slide_spec.get("future") or slide_spec.get("outlook"), 4)
+        add_card(slide, 0.85, 1.72, 5.45, 3.1, "研究贡献", contributions, theme, "success", density, overflow, warnings)
+        add_card(slide, 6.85, 1.72, 5.45, 3.1, "局限与边界", limitations, theme, "danger", density, overflow, warnings)
+        if implications:
+            add_card(slide, 0.85, 5.28, 11.45, 1.05, "后续研究方向", implications, theme, "accent", density, overflow, warnings)
+
     def render_quote_slide(
         presentation,
         slide_spec: Dict[str, Any],
@@ -754,6 +1129,18 @@ def register_workflow_tools(
             render_architecture_slide(presentation, slide_spec, theme, density, overflow, warnings)
         elif slide_type == "table":
             render_table_slide(presentation, slide_spec, theme, density, overflow, warnings)
+        elif slide_type == "literature_matrix":
+            render_literature_matrix_slide(presentation, slide_spec, theme, density, overflow, warnings)
+        elif slide_type == "research_questions":
+            render_research_questions_slide(presentation, slide_spec, theme, density, overflow, warnings)
+        elif slide_type == "theoretical_framework":
+            render_theoretical_framework_slide(presentation, slide_spec, theme, density, overflow, warnings)
+        elif slide_type == "method_design":
+            render_method_design_slide(presentation, slide_spec, theme, density, overflow, warnings)
+        elif slide_type == "findings":
+            render_findings_slide(presentation, slide_spec, theme, density, overflow, warnings)
+        elif slide_type == "contribution_limitations":
+            render_contribution_limitations_slide(presentation, slide_spec, theme, density, overflow, warnings)
         elif slide_type == "quote":
             render_quote_slide(presentation, slide_spec, theme, density, overflow, warnings)
         elif slide_type in {"closing", "end"}:
@@ -1864,12 +2251,12 @@ def register_workflow_tools(
 
     @app.tool(
         annotations=ToolAnnotations(
-            title="List Built-in Themes",
+            title="List Presentation Options",
             readOnlyHint=True,
         ),
     )
-    def list_themes() -> Dict[str, Any]:
-        """List built-in visual themes for non-template presentation generation."""
+    def list_presentation_options() -> Dict[str, Any]:
+        """List available visual themes and slide layout schemas for direct presentation generation."""
         return {
             "themes": [
                 {
@@ -1882,6 +2269,20 @@ def register_workflow_tools(
                 for theme_id, theme in get_builtin_themes().items()
             ],
             "default_theme": "business_blue",
+            "layouts": get_builtin_layouts(),
+            "default_layout_sequence": [
+                "cover",
+                "summary",
+                "research_questions",
+                "literature_matrix",
+                "theoretical_framework",
+                "method_design",
+                "findings",
+                "contribution_limitations",
+                "closing",
+            ],
+            "academic_recommended_theme": "academic_burgundy",
+            "usage_hint": "Choose one theme for the deck, then set slides[].type to a layout_id and fill the listed fields before calling generate_presentation.",
         }
 
     @app.tool(
