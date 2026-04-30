@@ -1,0 +1,15 @@
+__pycache__/
+*.py[cod]
+.git/
+.github/
+.venv/
+build/
+dist/
+wheels/
+*.egg-info/
+scratch/
+output/
+ppt/
+public/downloads/
+*.bak
+.DS_Store

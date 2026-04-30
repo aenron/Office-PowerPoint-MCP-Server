@@ -1,0 +1,37 @@
+services:
+  ppt-mcp-sse:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: office-powerpoint-mcp-server:latest
+    container_name: ppt-mcp-sse
+    command:
+      - --transport
+      - sse
+      - --host
+      - 0.0.0.0
+      - --port
+      - "8000"
+      - --allowed-hosts
+      - ${MCP_ALLOWED_HOSTS:-localhost:8000,127.0.0.1:8000,ppt-mcp-sse:8000}
+    environment:
+      DOWNLOAD_URL: ${DOWNLOAD_URL:-http://localhost:8000}
+      PPT_TEMPLATE_PATH: ${PPT_TEMPLATE_PATH:-/app/templates}
+    ports:
+      - "${MCP_PORT:-8000}:8000"
+    volumes:
+      - ./ppt:/app/ppt
+      - ./output:/app/output
+      - ./public/downloads:/app/public/downloads
+      - ./templates/profiles:/app/templates/profiles
+    restart: unless-stopped
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import socket; s=socket.create_connection(('127.0.0.1', 8000), 3); s.close()"
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s

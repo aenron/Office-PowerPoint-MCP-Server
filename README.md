@@ -262,14 +262,23 @@ python ppt_mcp_server.py --transport http --port 8000
 
 Run in Docker
 ```bash
-docker build -t ppt_mcp_server .
-docker run -d --rm -p 8000:8000 ppt_mcp_server -t http
+docker compose up -d --build
+```
+
+The compose service starts the MCP server with SSE transport on port `8000`.
+Generated PPT files are persisted to `./ppt`, and download artifacts are persisted
+to `./public/downloads`.
+
+For a custom public download URL or host allowlist:
+
+```bash
+DOWNLOAD_URL=http://localhost:8000 MCP_ALLOWED_HOSTS=localhost:8000,127.0.0.1:8000 docker compose up -d --build
 ```
 
 
 ### Download Generated Presentations
 
-When running with HTTP transport, `save_presentation` stores generated `.pptx` files in the fixed directory `public/downloads/` under the project root.
+When running with HTTP or SSE transport, `save_presentation` stores generated `.pptx` files in the fixed directory `public/downloads/` under the project root.
 
 The tool returns a `download_url` field that points to the file download endpoint:
 
