@@ -395,6 +395,76 @@ def register_workflow_tools(
                 },
                 "auto_infer_from": ["contributions", "limitations"],
             },
+            {
+                "layout_id": "expert_section",
+                "name": "智算章节页",
+                "description": "Section divider inspired by templates/智算专家会.pptx, with centered title and subtitle.",
+                "use_when": "Use for chapter openings and topic transitions.",
+                "required_fields": ["title"],
+                "optional_fields": ["subtitle", "content", "tag"],
+                "supported_fields": ["type", "title", "subtitle", "content", "tag", "source_note"],
+                "capacity_limits": {
+                    "title_chars": 26,
+                    "subtitle_chars": 42,
+                    "content_lines": 2,
+                },
+            },
+            {
+                "layout_id": "expert_title_content",
+                "name": "智算标题内容页",
+                "description": "Top-centered title layout with open content blocks, matching the expert forum deck rhythm.",
+                "use_when": "Use for overview, explanation, and normal content pages.",
+                "required_fields": ["title"],
+                "optional_fields": ["statement", "items", "sections", "content"],
+                "supported_fields": ["type", "title", "statement", "items", "sections", "content", "source_note"],
+                "capacity_limits": {
+                    "blocks": 4,
+                    "points_per_block": 3,
+                    "line_chars": 32,
+                },
+            },
+            {
+                "layout_id": "expert_split",
+                "name": "智算左右图文页",
+                "description": "Large left visual area plus right explanatory stack, based on the case-study pages in the template.",
+                "use_when": "Use for case pages, scenario explanation, and image-plus-text evidence.",
+                "required_fields": ["title"],
+                "optional_fields": ["image_path", "image_caption", "items", "sections", "content"],
+                "supported_fields": ["type", "title", "image_path", "image_caption", "items", "sections", "content", "source_note"],
+                "capacity_limits": {
+                    "right_blocks": 4,
+                    "points_per_block": 2,
+                    "line_chars": 30,
+                },
+            },
+            {
+                "layout_id": "expert_path",
+                "name": "智算流程路径页",
+                "description": "Six-step implementation path with a central numbered rail and side explanations.",
+                "use_when": "Use for scenario implementation paths, process methods, or staged logic.",
+                "required_fields": ["title", "steps"],
+                "optional_fields": ["items", "sections"],
+                "supported_fields": ["type", "title", "steps", "items", "sections", "source_note"],
+                "capacity_limits": {
+                    "steps": 6,
+                    "step_title_chars": 18,
+                    "step_detail_chars": 36,
+                },
+            },
+            {
+                "layout_id": "expert_scope",
+                "name": "智算范围清单页",
+                "description": "Vertical scope list inspired by the security-scope slide in the template.",
+                "use_when": "Use for scope, safeguards, checklist, policy coverage, or risk categories.",
+                "required_fields": ["title", "items"],
+                "optional_fields": ["sections"],
+                "supported_fields": ["type", "title", "items", "sections", "source_note"],
+                "capacity_limits": {
+                    "items": 4,
+                    "points_per_item": 2,
+                    "line_chars": 32,
+                },
+            },
         ]
 
     def get_theme(theme_id: str) -> Tuple[str, Dict[str, Any]]:
@@ -1023,6 +1093,11 @@ def register_workflow_tools(
                 "method": "method_design",
                 "finding": "findings",
                 "contribution": "contribution_limitations",
+                "academic_default_section": "expert_section",
+                "academic_default_content": "expert_title_content",
+                "academic_default_split": "expert_split",
+                "academic_default_path": "expert_path",
+                "academic_default_scope": "expert_scope",
             }
             return aliases.get(explicit, explicit)
         if slide_spec.get("questions") or slide_spec.get("research_questions"):
@@ -1644,6 +1719,160 @@ def register_workflow_tools(
         add_text(slide, 2.35, 3.25, 8.6, 0.7, subtitle, theme, 14, "secondary", alignment="center",
                  density=density, overflow=overflow, warnings=warnings, context="closing subtitle")
 
+    def add_expert_header(
+        slide,
+        title: str,
+        theme: Dict[str, Any],
+        kicker: str = "",
+        density: str = "standard",
+        overflow: str = "shrink_then_truncate",
+        warnings: Optional[List[str]] = None,
+    ) -> None:
+        add_rect(slide, 0, 0, 13.333, 7.5, theme_color(theme, "background"))
+        add_rect(slide, 0, 0, 13.333, 0.16, theme_color(theme, "primary"))
+        add_rect(slide, 0, 0.16, 0.16, 7.34, theme_color(theme, "accent"))
+        if kicker:
+            add_text(slide, 0.72, 0.34, 3.0, 0.22, kicker,
+                     theme, 8, "accent", True, density=density, overflow=overflow, warnings=warnings)
+        add_text(slide, 2.2, 0.48, 8.9, 0.55, title, theme, fit_text_size(
+            title, 22, 16, 26), "primary", True, "center", density=density, overflow=overflow, warnings=warnings)
+        add_rect(slide, 5.88, 1.18, 1.55, 0.04, theme_color(theme, "accent"))
+
+    def render_expert_section_slide(
+        presentation,
+        slide_spec: Dict[str, Any],
+        theme: Dict[str, Any],
+        density: str,
+        overflow: str,
+        warnings: List[str],
+    ) -> None:
+        slide = make_blank_slide(presentation)
+        add_rect(slide, 0, 0, 13.333, 7.5, theme_color(theme, "background"))
+        add_rect(slide, 0, 0, 13.333, 0.18, theme_color(theme, "primary"))
+        add_rect(slide, 0, 7.28, 13.333, 0.22, theme_color(theme, "primary"))
+        add_rect(slide, 0.72, 1.25, 1.55, 0.08, theme_color(theme, "accent"))
+        title = slide_spec.get("title") or "章节标题"
+        subtitle = slide_spec.get("subtitle") or slide_spec.get("content") or ""
+        add_text(slide, 2.95, 2.08, 7.45, 0.92, title, theme, fit_text_size(
+            title, 30, 20, 24), "primary", True, "center", density=density, overflow=overflow, warnings=warnings, context="expert section title")
+        if subtitle:
+            add_text(slide, 2.9, 3.05, 7.55, 0.45, subtitle, theme, 13, "secondary",
+                     alignment="center", density=density, overflow=overflow, warnings=warnings, context="expert section subtitle")
+        tag = slide_spec.get("tag")
+        if tag:
+            add_text(slide, 0.0, 5.05, 13.333, 0.36, tag, theme, 9, "muted",
+                     alignment="center", density=density, overflow=overflow, warnings=warnings, context="expert section tag")
+
+    def render_expert_title_content_slide(
+        presentation,
+        slide_spec: Dict[str, Any],
+        theme: Dict[str, Any],
+        density: str,
+        overflow: str,
+        warnings: List[str],
+    ) -> None:
+        slide = make_blank_slide(presentation)
+        add_expert_header(slide, slide_spec.get("title") or "内容页",
+                          theme, density=density, overflow=overflow, warnings=warnings)
+        statement = slide_spec.get("statement") or slide_spec.get("content") or ""
+        if statement:
+            add_text(slide, 1.1, 1.5, 11.1, 0.55, statement, theme, 16, "primary", True,
+                     alignment="center", density=density, overflow=overflow, warnings=warnings, context="expert content statement")
+        sections = trim_items(normalized_sections(
+            {"items": slide_spec.get("items") or slide_spec.get("sections") or []}), 4, warnings, "expert content blocks")
+        if not sections and not statement:
+            sections = [{"title": "核心内容", "points": safe_lines(slide_spec.get("text"), 4), "raw": {}}]
+        positions = [(1.0, 2.35), (7.05, 2.35), (1.0, 4.55), (7.05, 4.55)]
+        for index, section in enumerate(sections):
+            left, top = positions[index]
+            add_rect(slide, left, top, 5.3, 1.5, theme_color(theme, "surface"),
+                     theme_color(theme, "line"), True)
+            add_rect(slide, left, top, 0.08, 1.5, theme_color(
+                theme, "accent" if index % 2 == 0 else "primary"))
+            add_text(slide, left + 0.22, top + 0.18, 4.8, 0.3, section["title"], theme, 13, "primary",
+                     True, density=density, overflow=overflow, warnings=warnings, context="expert content block title")
+            add_text(slide, left + 0.22, top + 0.62, 4.85, 0.7, "\n".join([f"- {line}" for line in section["points"][:3]]),
+                     theme, 9, "secondary", density=density, overflow=overflow, warnings=warnings, context="expert content block body")
+
+    def render_expert_split_slide(
+        presentation,
+        slide_spec: Dict[str, Any],
+        theme: Dict[str, Any],
+        density: str,
+        overflow: str,
+        warnings: List[str],
+    ) -> None:
+        slide = make_blank_slide(presentation)
+        add_expert_header(slide, slide_spec.get("title") or "图文页",
+                          theme, density=density, overflow=overflow, warnings=warnings)
+        image_path = slide_spec.get("image_path", "")
+        if image_path and os.path.exists(image_path):
+            ppt_utils.add_image(slide, image_path, 0.95, 1.55, 5.2, 4.7)
+        else:
+            add_rect(slide, 0.95, 1.55, 5.2, 4.7, theme_color(
+                theme, "surface"), theme_color(theme, "line"), True)
+            add_text(slide, 1.25, 3.68, 4.6, 0.35, slide_spec.get("image_caption") or "图示区域",
+                     theme, 12, "muted", True, "center", density=density, overflow=overflow, warnings=warnings, context="expert split placeholder")
+        if slide_spec.get("image_caption") and not image_path:
+            add_text(slide, 1.15, 6.35, 4.8, 0.25, slide_spec.get("image_caption"),
+                     theme, 8, "muted", alignment="center", density=density, overflow=overflow)
+        sections = trim_items(normalized_sections(
+            {"items": slide_spec.get("items") or slide_spec.get("sections") or []}), 4, warnings, "expert split blocks")
+        for index, section in enumerate(sections):
+            top = 1.55 + index * 1.18
+            add_text(slide, 6.75, top, 4.9, 0.3, section["title"], theme, 13, "primary", True,
+                     density=density, overflow=overflow, warnings=warnings, context="expert split title")
+            add_text(slide, 6.75, top + 0.38, 5.05, 0.55, "\n".join([f"- {line}" for line in section["points"][:2]]),
+                     theme, 9, "secondary", density=density, overflow=overflow, warnings=warnings, context="expert split body")
+            add_rect(slide, 6.48, top + 0.06, 0.08, 0.72, theme_color(theme, "accent"))
+
+    def render_expert_path_slide(
+        presentation,
+        slide_spec: Dict[str, Any],
+        theme: Dict[str, Any],
+        density: str,
+        overflow: str,
+        warnings: List[str],
+    ) -> None:
+        slide = make_blank_slide(presentation)
+        add_expert_header(slide, slide_spec.get("title") or "流程路径",
+                          theme, density=density, overflow=overflow, warnings=warnings)
+        steps = trim_items(normalized_sections(
+            {"items": slide_spec.get("steps") or slide_spec.get("items") or slide_spec.get("sections") or []}), 6, warnings, "expert path steps")
+        for index, step in enumerate(steps):
+            y = 1.55 + index * 0.82
+            add_rect(slide, 5.94, y, 0.48, 0.48, theme_color(theme, "accent"), radius=True)
+            add_text(slide, 6.05, y + 0.12, 0.25, 0.2, str(index + 1), theme,
+                     9, "surface", True, "center", density=density, overflow=overflow)
+            add_text(slide, 1.05, y + 0.05, 4.25, 0.26, step["title"], theme, 12, "primary", True,
+                     density=density, overflow=overflow, warnings=warnings, context="expert path title")
+            detail = "；".join(step["points"][:2])
+            add_text(slide, 6.85, y + 0.02, 5.05, 0.35, detail, theme, 9, "secondary",
+                     density=density, overflow=overflow, warnings=warnings, context="expert path detail")
+
+    def render_expert_scope_slide(
+        presentation,
+        slide_spec: Dict[str, Any],
+        theme: Dict[str, Any],
+        density: str,
+        overflow: str,
+        warnings: List[str],
+    ) -> None:
+        slide = make_blank_slide(presentation)
+        add_expert_header(slide, slide_spec.get("title") or "范围清单",
+                          theme, density=density, overflow=overflow, warnings=warnings)
+        items = trim_items(normalized_sections(
+            {"items": slide_spec.get("items") or slide_spec.get("sections") or []}), 4, warnings, "expert scope items")
+        for index, item in enumerate(items):
+            top = 1.55 + index * 1.2
+            add_rect(slide, 1.25, top, 10.75, 0.9, theme_color(
+                theme, "surface"), theme_color(theme, "line"), True)
+            add_rect(slide, 1.25, top, 0.12, 0.9, theme_color(theme, "accent"))
+            add_text(slide, 1.62, top + 0.18, 2.7, 0.26, item["title"], theme, 13, "primary", True,
+                     density=density, overflow=overflow, warnings=warnings, context="expert scope title")
+            add_text(slide, 4.55, top + 0.15, 6.9, 0.42, "；".join(item["points"][:2]), theme, 10, "secondary",
+                     density=density, overflow=overflow, warnings=warnings, context="expert scope detail")
+
     def render_generated_slide(
         presentation,
         slide_spec: Dict[str, Any],
@@ -1656,6 +1885,21 @@ def register_workflow_tools(
         if slide_type == "cover":
             render_cover_slide(presentation, slide_spec,
                                theme, density, overflow, warnings)
+        elif slide_type == "expert_section":
+            render_expert_section_slide(
+                presentation, slide_spec, theme, density, overflow, warnings)
+        elif slide_type == "expert_title_content":
+            render_expert_title_content_slide(
+                presentation, slide_spec, theme, density, overflow, warnings)
+        elif slide_type == "expert_split":
+            render_expert_split_slide(
+                presentation, slide_spec, theme, density, overflow, warnings)
+        elif slide_type == "expert_path":
+            render_expert_path_slide(
+                presentation, slide_spec, theme, density, overflow, warnings)
+        elif slide_type == "expert_scope":
+            render_expert_scope_slide(
+                presentation, slide_spec, theme, density, overflow, warnings)
         elif slide_type in {"comparison"}:
             render_two_column_slide(
                 presentation, slide_spec, theme, density, overflow, warnings)
