@@ -448,12 +448,55 @@ if is_truthy_env(os.environ.get("PPT_ENABLE_ADVANCED_TOOLS")):
 # ---- Main Function ----
 
 
-def main(transport: str = "stdio", port: int = 8000, host: str = "127.0.0.1", allowed_hosts: str = ""):
+def env_int(name: str, default: int) -> int:
+    """Read a positive integer from the environment."""
+    try:
+        value = int((os.environ.get(name) or "").strip())
+        return value if value > 0 else default
+    except ValueError:
+        return default
+
+
+def run_uvicorn_app(starlette_app, host: str, port: int, timeout_keep_alive: int, timeout_graceful_shutdown: int):
+    """Run a FastMCP Starlette app with explicit uvicorn timeout settings."""
+    import asyncio
+    import uvicorn
+
+    config = uvicorn.Config(
+        starlette_app,
+        host=host,
+        port=port,
+        log_level=app.settings.log_level.lower(),
+        timeout_keep_alive=timeout_keep_alive,
+        timeout_graceful_shutdown=timeout_graceful_shutdown,
+    )
+    server = uvicorn.Server(config)
+    try:
+        asyncio.run(server.serve())
+    except asyncio.exceptions.CancelledError:
+        print("Server stopped by user.")
+    except KeyboardInterrupt:
+        print("Server stopped by user.")
+    except Exception as e:
+        print(f"Error starting server: {e}")
+
+
+def main(
+    transport: str = "stdio",
+    port: int = 8000,
+    host: str = "127.0.0.1",
+    allowed_hosts: str = "",
+    timeout_keep_alive: int = None,
+    timeout_graceful_shutdown: int = None,
+):
+    timeout_keep_alive = timeout_keep_alive or env_int(
+        "MCP_TIMEOUT_KEEP_ALIVE", 120)
+    timeout_graceful_shutdown = timeout_graceful_shutdown or env_int(
+        "MCP_TIMEOUT_GRACEFUL_SHUTDOWN", 300)
     parsed_allowed_hosts = [item.strip()
                             for item in allowed_hosts.split(",") if item.strip()]
 
     if transport == "http":
-        import asyncio
         # Set the port for HTTP transport
         app.settings.host = host
         app.settings.port = port
@@ -463,14 +506,13 @@ def main(transport: str = "stdio", port: int = 8000, host: str = "127.0.0.1", al
                 allowed_hosts=parsed_allowed_hosts,
             )
         # Start the FastMCP server with HTTP transport
-        try:
-            app.run(transport='streamable-http')
-        except asyncio.exceptions.CancelledError:
-            print("Server stopped by user.")
-        except KeyboardInterrupt:
-            print("Server stopped by user.")
-        except Exception as e:
-            print(f"Error starting server: {e}")
+        run_uvicorn_app(
+            app.streamable_http_app(),
+            host,
+            port,
+            timeout_keep_alive,
+            timeout_graceful_shutdown,
+        )
 
     elif transport == "sse":
         app.settings.host = host
@@ -481,7 +523,13 @@ def main(transport: str = "stdio", port: int = 8000, host: str = "127.0.0.1", al
                 allowed_hosts=parsed_allowed_hosts,
             )
         # Run the FastMCP server in SSE (Server Side Events) mode
-        app.run(transport='sse')
+        run_uvicorn_app(
+            app.sse_app(),
+            host,
+            port,
+            timeout_keep_alive,
+            timeout_graceful_shutdown,
+        )
 
     else:
         # Run the FastMCP server
@@ -523,5 +571,24 @@ if __name__ == "__main__":
         default="",
         help="Comma-separated Host header allowlist, e.g. '59.110.150.224:7380,example.com:7380'"
     )
+    parser.add_argument(
+        "--timeout-keep-alive",
+        type=int,
+        default=None,
+        help="Uvicorn keep-alive timeout in seconds for HTTP/SSE transports (default: MCP_TIMEOUT_KEEP_ALIVE or 120)"
+    )
+    parser.add_argument(
+        "--timeout-graceful-shutdown",
+        type=int,
+        default=None,
+        help="Uvicorn graceful shutdown timeout in seconds for HTTP/SSE transports (default: MCP_TIMEOUT_GRACEFUL_SHUTDOWN or 300)"
+    )
     args = parser.parse_args()
-    main(args.transport, args.port, args.host, args.allowed_hosts)
+    main(
+        args.transport,
+        args.port,
+        args.host,
+        args.allowed_hosts,
+        args.timeout_keep_alive,
+        args.timeout_graceful_shutdown,
+    )

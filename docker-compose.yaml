@@ -17,6 +17,8 @@ services:
     environment:
       DOWNLOAD_URL: ${DOWNLOAD_URL:-http://localhost:8000}
       PPT_TEMPLATE_PATH: ${PPT_TEMPLATE_PATH:-/app/templates}
+      MCP_TIMEOUT_KEEP_ALIVE: ${MCP_TIMEOUT_KEEP_ALIVE:-120}
+      MCP_TIMEOUT_GRACEFUL_SHUTDOWN: ${MCP_TIMEOUT_GRACEFUL_SHUTDOWN:-300}
     ports:
       - "${MCP_PORT:-8000}:8000"
     volumes:
