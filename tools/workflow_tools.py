@@ -130,6 +130,12 @@ def register_workflow_tools(
                 "use_when": "Use for the first page of a deck.",
                 "required_fields": ["title"],
                 "optional_fields": ["subtitle", "content", "tag"],
+                "supported_fields": ["type", "title", "subtitle", "content", "tag"],
+                "capacity_limits": {
+                    "subtitle_chars": 80,
+                    "content_lines": 3,
+                    "content_chars_per_line": 32,
+                },
             },
             {
                 "layout_id": "summary",
@@ -138,6 +144,12 @@ def register_workflow_tools(
                 "use_when": "Use for agenda, chapter overview, executive summary, or final summary.",
                 "required_fields": ["title"],
                 "optional_fields": ["statement", "subtitle", "sections", "items", "content", "text"],
+                "supported_fields": ["type", "title", "subtitle", "statement", "sections", "items", "content", "text", "source_note"],
+                "capacity_limits": {
+                    "sections": 4,
+                    "items": 6,
+                    "line_chars": 36,
+                },
                 "auto_infer_from": ["items", "sections"],
             },
             {
@@ -147,6 +159,12 @@ def register_workflow_tools(
                 "use_when": "Use when the slide has 2-6 peer items.",
                 "required_fields": ["title", "items"],
                 "optional_fields": ["sections", "density"],
+                "supported_fields": ["type", "title", "items", "sections", "density", "source_note"],
+                "capacity_limits": {
+                    "cards": 6,
+                    "points_per_card": 4,
+                    "line_chars": 32,
+                },
                 "auto_infer_from": ["items", "sections"],
             },
             {
@@ -156,6 +174,12 @@ def register_workflow_tools(
                 "use_when": "Use for contrasts, debates, alternatives, and problem-solution pages.",
                 "required_fields": ["title"],
                 "optional_fields": ["left", "right", "comparisons"],
+                "supported_fields": ["type", "title", "left", "right", "comparisons", "source_note"],
+                "capacity_limits": {
+                    "columns": 2,
+                    "items_per_column": 5,
+                    "line_chars": 34,
+                },
                 "auto_infer_from": ["left", "right", "comparisons"],
             },
             {
@@ -165,6 +189,12 @@ def register_workflow_tools(
                 "use_when": "Use for method flow, implementation path, or logical sequence.",
                 "required_fields": ["title", "steps"],
                 "optional_fields": ["items", "sections"],
+                "supported_fields": ["type", "title", "steps", "items", "sections", "source_note"],
+                "capacity_limits": {
+                    "steps": 4,
+                    "points_per_step": 3,
+                    "line_chars": 28,
+                },
                 "auto_infer_from": ["steps"],
             },
             {
@@ -174,6 +204,11 @@ def register_workflow_tools(
                 "use_when": "Use when steps have phases or more than four sequential items.",
                 "required_fields": ["title", "steps"],
                 "optional_fields": ["items"],
+                "supported_fields": ["type", "title", "steps", "items", "source_note"],
+                "capacity_limits": {
+                    "steps": 8,
+                    "line_chars": 28,
+                },
                 "auto_infer_from": ["steps"],
             },
             {
@@ -183,6 +218,12 @@ def register_workflow_tools(
                 "use_when": "Use only when the input includes concrete numbers or indicators.",
                 "required_fields": ["title", "metrics"],
                 "optional_fields": ["items"],
+                "supported_fields": ["type", "title", "metrics", "items", "source_note"],
+                "capacity_limits": {
+                    "metrics": 6,
+                    "label_chars": 16,
+                    "detail_chars": 32,
+                },
                 "auto_infer_from": ["metrics"],
             },
             {
@@ -192,6 +233,12 @@ def register_workflow_tools(
                 "use_when": "Use for multi-layer frameworks and component relationships.",
                 "required_fields": ["title", "layers"],
                 "optional_fields": ["items", "relations"],
+                "supported_fields": ["type", "title", "layers", "items", "relations", "source_note"],
+                "capacity_limits": {
+                    "layers": 5,
+                    "items_per_layer": 4,
+                    "line_chars": 28,
+                },
                 "auto_infer_from": ["layers", "relations"],
             },
             {
@@ -201,6 +248,12 @@ def register_workflow_tools(
                 "use_when": "Use for variables, samples, coding schemes, literature details, and comparisons.",
                 "required_fields": ["title", "table"],
                 "optional_fields": ["table.headers", "table.rows"],
+                "supported_fields": ["type", "title", "table", "source_note"],
+                "capacity_limits": {
+                    "columns": 5,
+                    "rows_per_slide": 6,
+                    "cell_chars": 28,
+                },
                 "auto_infer_from": ["table"],
             },
             {
@@ -210,6 +263,12 @@ def register_workflow_tools(
                 "use_when": "Use for thesis statement, key conclusion, or central claim.",
                 "required_fields": ["title", "statement"],
                 "optional_fields": ["content", "points", "items"],
+                "supported_fields": ["type", "title", "statement", "content", "points", "items", "source_note"],
+                "capacity_limits": {
+                    "statement_chars": 90,
+                    "points": 4,
+                    "point_chars": 32,
+                },
                 "auto_infer_from": ["statement"],
             },
             {
@@ -219,6 +278,11 @@ def register_workflow_tools(
                 "use_when": "Use for the last page.",
                 "required_fields": ["title"],
                 "optional_fields": ["subtitle", "content"],
+                "supported_fields": ["type", "title", "subtitle", "content", "source_note"],
+                "capacity_limits": {
+                    "subtitle_chars": 60,
+                    "content_lines": 3,
+                },
             },
             {
                 "layout_id": "research_questions",
@@ -227,6 +291,13 @@ def register_workflow_tools(
                 "use_when": "Use for opening the research logic in social-science talks.",
                 "required_fields": ["title", "questions"],
                 "optional_fields": ["background", "context", "statement", "gap", "research_gap"],
+                "supported_fields": ["type", "title", "questions", "research_questions", "items", "background", "context", "statement", "gap", "research_gap", "source_note"],
+                "capacity_limits": {
+                    "questions": 4,
+                    "background_chars": 70,
+                    "context_chars": 90,
+                    "gap_chars": 90,
+                },
                 "auto_infer_from": ["questions", "research_questions"],
             },
             {
@@ -236,6 +307,12 @@ def register_workflow_tools(
                 "use_when": "Use for literature review and positioning pages.",
                 "required_fields": ["title", "literature"],
                 "optional_fields": ["studies", "items", "table.headers", "table.rows"],
+                "supported_fields": ["type", "title", "literature", "studies", "items", "table", "source_note"],
+                "capacity_limits": {
+                    "rows_per_slide": 6,
+                    "columns": 4,
+                    "cell_chars": 30,
+                },
                 "auto_infer_from": ["literature", "studies"],
             },
             {
@@ -245,6 +322,14 @@ def register_workflow_tools(
                 "use_when": "Use for theory, hypotheses, analytical framework, and mechanism pages.",
                 "required_fields": ["title", "concepts"],
                 "optional_fields": ["framework", "variables", "relations", "propositions", "hypotheses", "mechanism", "explanation"],
+                "supported_fields": ["type", "title", "concepts", "framework", "variables", "items", "relations", "propositions", "hypotheses", "mechanism", "explanation", "content", "source_note"],
+                "capacity_limits": {
+                    "concepts": 5,
+                    "concept_title_chars": 14,
+                    "points_per_concept": 2,
+                    "point_chars": 24,
+                    "framework_chars": 120,
+                },
                 "auto_infer_from": ["framework", "concepts", "variables"],
             },
             {
@@ -254,6 +339,12 @@ def register_workflow_tools(
                 "use_when": "Use for data and method sections in academic reports.",
                 "required_fields": ["title"],
                 "optional_fields": ["methods", "research_design", "data_sources", "sample", "variables", "analysis", "method"],
+                "supported_fields": ["type", "title", "methods", "research_design", "steps", "data_sources", "data", "sample", "scope", "variables", "analysis", "method", "source_note"],
+                "capacity_limits": {
+                    "sections": 4,
+                    "points_per_section": 3,
+                    "line_chars": 34,
+                },
                 "auto_infer_from": ["methods", "data_sources", "research_design"],
             },
             {
@@ -263,6 +354,12 @@ def register_workflow_tools(
                 "use_when": "Use for empirical findings, analysis results, or case observations.",
                 "required_fields": ["title", "findings"],
                 "optional_fields": ["headline", "statement", "items", "sections"],
+                "supported_fields": ["type", "title", "findings", "headline", "statement", "items", "sections", "source_note"],
+                "capacity_limits": {
+                    "findings": 4,
+                    "points_per_finding": 3,
+                    "point_chars": 28,
+                },
                 "auto_infer_from": ["findings"],
             },
             {
@@ -272,6 +369,13 @@ def register_workflow_tools(
                 "use_when": "Use near the end of a research presentation.",
                 "required_fields": ["title"],
                 "optional_fields": ["contributions", "limitations", "implications", "future", "outlook"],
+                "supported_fields": ["type", "title", "contributions", "contribution", "limitations", "limitation", "implications", "future", "outlook", "left", "right", "items", "source_note"],
+                "capacity_limits": {
+                    "contributions": 3,
+                    "limitations": 3,
+                    "future": 3,
+                    "line_chars": 30,
+                },
                 "auto_infer_from": ["contributions", "limitations"],
             },
         ]
@@ -932,6 +1036,39 @@ def register_workflow_tools(
             return "cards"
         return "summary"
 
+    def layout_metadata(layout_id: str) -> Dict[str, Any]:
+        for layout in get_builtin_layouts():
+            if layout.get("layout_id") == layout_id:
+                return layout
+        return {}
+
+    def collect_ignored_fields(slide_spec: Dict[str, Any], rendered_type: str, slide_index: int) -> List[Dict[str, Any]]:
+        layout = layout_metadata(rendered_type)
+        supported = set(layout.get("supported_fields") or [])
+        if not supported:
+            return []
+        ignored = []
+        common_fields = {
+            "slide_type",
+            "kicker",
+            "density",
+            "overflow",
+            "speaker_notes",
+            "notes",
+        }
+        for key, value in (slide_spec or {}).items():
+            if key in supported or key in common_fields:
+                continue
+            if value in (None, "", [], {}):
+                continue
+            ignored.append({
+                "slide_index": slide_index,
+                "slide_type": rendered_type,
+                "field": key,
+                "message": f"{rendered_type}.{key} is not rendered by the selected layout.",
+            })
+        return ignored
+
     def render_cover_slide(
         presentation,
         slide_spec: Dict[str, Any],
@@ -950,6 +1087,9 @@ def register_workflow_tools(
                  density=density, overflow=overflow, min_font_size=20, warnings=warnings, context="cover title")
         add_text(slide, 0.82, 3.0, 7.8, 0.8, subtitle, theme, 15, "secondary", density=density,
                  overflow=overflow, min_font_size=10, warnings=warnings, context="cover subtitle")
+        if slide_spec.get("content") and slide_spec.get("subtitle"):
+            add_text(slide, 0.82, 4.12, 7.8, 0.9, slide_spec.get("content"), theme, 10, "muted",
+                     density=density, overflow=overflow, min_font_size=8, warnings=warnings, context="cover content")
         add_rect(slide, 9.6, 0.0, 3.7, 7.5, theme_color(theme, "primary"))
         add_rect(slide, 10.1, 1.15, 2.35, 0.72,
                  theme_color(theme, "accent"), radius=True)
@@ -1256,16 +1396,20 @@ def register_workflow_tools(
         slide = make_blank_slide(presentation)
         add_slide_header(slide, slide_spec.get("title") or "研究问题",
                          theme, slide_spec.get("kicker") or "RESEARCH QUESTIONS")
-        background = slide_spec.get("background") or slide_spec.get(
-            "context") or slide_spec.get("statement") or ""
+        background = slide_spec.get("background") or slide_spec.get("statement") or ""
+        context = slide_spec.get("context") or ""
         if background:
-            add_text(slide, 0.85, 1.48, 11.65, 0.48, background, theme, 11, "secondary", density=density,
-                     overflow=overflow, warnings=warnings, context="research question background")
+            add_text(slide, 0.85, 1.38, 11.65, 0.34, background, theme, 10, "secondary", density=density,
+                      overflow=overflow, warnings=warnings, context="research question background")
+        if context:
+            add_text(slide, 0.85, 1.76, 11.65, 0.42, context, theme, 9, "muted", density=density,
+                     overflow=overflow, min_font_size=8, warnings=warnings, context="research question context")
         questions = trim_items(safe_lines(slide_spec.get("questions") or slide_spec.get(
             "research_questions") or slide_spec.get("items"), 6), 4, warnings, "research questions")
-        top = 2.05
+        top = 2.36 if context else 2.05
+        question_gap = 0.86 if context else 1.12
         for index, question in enumerate(questions):
-            y = top + index * 1.12
+            y = top + index * question_gap
             add_rect(slide, 0.9, y, 0.58, 0.58, theme_color(
                 theme, "accent"), radius=True)
             add_text(slide, 1.02, y + 0.15, 0.34, 0.22,
@@ -1276,12 +1420,12 @@ def register_workflow_tools(
                      density=density, overflow=overflow, warnings=warnings, context="research question")
         gap = slide_spec.get("gap") or slide_spec.get("research_gap") or ""
         if gap:
-            add_rect(slide, 0.9, 5.95, 11.3, 0.68, theme_color(
+            add_rect(slide, 0.9, 6.03, 11.3, 0.72, theme_color(
                 theme, "light"), theme_color(theme, "line"), True)
-            add_text(slide, 1.12, 6.12, 1.0, 0.24, "研究缺口", theme, 10, "accent", True,
-                     density=density, overflow=overflow, warnings=warnings, context="research gap label")
-            add_text(slide, 2.25, 6.12, 9.62, 0.24, gap, theme, 10, "secondary",
-                     density=density, overflow=overflow, warnings=warnings, context="research gap")
+            add_text(slide, 1.12, 6.18, 1.0, 0.24, "研究缺口", theme, 10, "accent", True,
+                      density=density, overflow=overflow, warnings=warnings, context="research gap label")
+            add_text(slide, 2.25, 6.12, 9.62, 0.42, gap, theme, 9, "secondary",
+                     density=density, overflow=overflow, min_font_size=8, warnings=warnings, context="research gap")
 
     def render_theoretical_framework_slide(
         presentation,
@@ -1294,33 +1438,37 @@ def register_workflow_tools(
         slide = make_blank_slide(presentation)
         add_slide_header(slide, slide_spec.get("title") or "理论框架",
                          theme, slide_spec.get("kicker") or "FRAMEWORK")
+        framework_text = slide_spec.get("framework") or ""
         concepts = trim_items(normalized_sections({"items": slide_spec.get("concepts") or slide_spec.get(
-            "variables") or slide_spec.get("framework") or slide_spec.get("items") or []}), 5, warnings, "framework concepts")
+            "variables") or slide_spec.get("items") or []}), 5, warnings, "framework concepts")
         if not concepts:
             concepts = [{"title": "核心概念", "points": safe_lines(
-                slide_spec.get("content"), 4), "raw": {}}]
+                framework_text or slide_spec.get("content"), 4), "raw": {}}]
         gap = 10.8 / max(len(concepts), 1)
-        y = 2.05
+        y = 1.82
         for index, concept in enumerate(concepts):
             left = 0.95 + index * gap
             width = min(2.0, gap - 0.18)
-            add_rect(slide, left, y, width, 1.12, theme_color(
+            add_rect(slide, left, y, width, 1.55, theme_color(
                 theme, "surface"), theme_color(theme, "line"), True)
             add_rect(slide, left, y, width, 0.14, theme_color(theme, "accent"))
-            add_text(slide, left + 0.12, y + 0.28, width - 0.24, 0.28, concept["title"], theme, 11, "primary",
-                     True, "center", density=density, overflow=overflow, warnings=warnings, context="framework concept")
-            add_text(slide, left + 0.12, y + 0.68, width - 0.24, 0.26, "\n".join(concept["points"][:2]), theme, 8, "secondary",
-                     alignment="center", density=density, overflow=overflow, min_font_size=7, warnings=warnings, context="framework concept detail")
+            add_text(slide, left + 0.12, y + 0.24, width - 0.24, 0.44, concept["title"], theme, 10, "primary",
+                     True, "center", density=density, overflow=overflow, min_font_size=8, warnings=warnings, context="framework concept")
+            add_text(slide, left + 0.12, y + 0.78, width - 0.24, 0.55, "\n".join(concept["points"][:2]), theme, 8, "secondary",
+                      alignment="center", density=density, overflow=overflow, min_font_size=7, warnings=warnings, context="framework concept detail")
             if index < len(concepts) - 1:
                 add_text(slide, left + width + 0.1, y + 0.43, 0.35,
                          0.28, ">", theme, 18, "accent", True, "center")
         propositions = safe_lines(slide_spec.get("relations") or slide_spec.get(
             "propositions") or slide_spec.get("hypotheses"), 4)
-        add_card(slide, 0.95, 4.15, 5.45, 1.78, "关系假设 / 分析命题",
+        add_card(slide, 0.95, 4.35, 5.45, 1.78, "关系假设 / 分析命题",
                  propositions, theme, "accent", density, overflow, warnings)
-        mechanism = safe_lines(slide_spec.get(
-            "mechanism") or slide_spec.get("explanation"), 4)
-        add_card(slide, 6.75, 4.15, 5.45, 1.78, "机制解释", mechanism,
+        mechanism_source = slide_spec.get("mechanism") or slide_spec.get(
+            "explanation") or framework_text
+        mechanism_title = "机制解释" if (slide_spec.get("mechanism") or slide_spec.get(
+            "explanation")) else "总体框架"
+        mechanism = safe_lines(mechanism_source, 4)
+        add_card(slide, 6.75, 4.35, 5.45, 1.78, mechanism_title, mechanism,
                  theme, "success", density, overflow, warnings)
 
     def render_method_design_slide(
@@ -1334,8 +1482,29 @@ def register_workflow_tools(
         slide = make_blank_slide(presentation)
         add_slide_header(slide, slide_spec.get("title") or "研究设计",
                          theme, slide_spec.get("kicker") or "METHOD")
-        method_items = slide_spec.get("methods") or slide_spec.get(
+        method_items = []
+        if slide_spec.get("data_sources") or slide_spec.get("data"):
+            method_items.append({"title": "数据来源", "points": safe_lines(
+                slide_spec.get("data_sources") or slide_spec.get("data"), 3)})
+        if slide_spec.get("sample") or slide_spec.get("scope"):
+            method_items.append({"title": "样本范围", "points": safe_lines(
+                slide_spec.get("sample") or slide_spec.get("scope"), 3)})
+        if slide_spec.get("variables"):
+            method_items.append({"title": "变量设计", "points": safe_lines(
+                slide_spec.get("variables"), 3)})
+
+        explicit_methods = slide_spec.get("methods") or slide_spec.get(
             "research_design") or slide_spec.get("steps")
+        if explicit_methods:
+            if isinstance(explicit_methods, list) and all(isinstance(item, dict) for item in explicit_methods):
+                method_items.extend(explicit_methods)
+            else:
+                method_items.append({"title": "分析方法", "points": safe_lines(
+                    explicit_methods, 3)})
+        elif slide_spec.get("analysis") or slide_spec.get("method"):
+            method_items.append({"title": "分析方法", "points": safe_lines(
+                slide_spec.get("analysis") or slide_spec.get("method"), 3)})
+
         if not method_items:
             method_items = [
                 {"title": "数据来源", "points": safe_lines(slide_spec.get(
@@ -2801,6 +2970,7 @@ def register_workflow_tools(
         slide_specs = expand_capacity_slide_specs(slide_specs)
 
         rendered_slide_types = []
+        ignored_fields = []
         warnings: List[str] = []
         for index, slide_spec in enumerate(slide_specs):
             if not isinstance(slide_spec, dict):
@@ -2813,16 +2983,17 @@ def register_workflow_tools(
                              or density or "standard").strip().lower()
             slide_overflow = (slide_spec.get(
                 "overflow") or overflow or "shrink_then_truncate").strip().lower()
-            rendered_slide_types.append(
-                render_generated_slide(
-                    presentation,
-                    slide_spec,
-                    theme_spec,
-                    slide_density,
-                    slide_overflow,
-                    warnings,
-                )
+            rendered_type = render_generated_slide(
+                presentation,
+                slide_spec,
+                theme_spec,
+                slide_density,
+                slide_overflow,
+                warnings,
             )
+            rendered_slide_types.append(rendered_type)
+            ignored_fields.extend(collect_ignored_fields(
+                slide_spec, rendered_type, index + 1))
 
         effective_footer_text = footer_text or title
         add_deck_footer(
@@ -2860,6 +3031,7 @@ def register_workflow_tools(
             "visual_level": normalized_visual_level,
             "page_size": effective_page_size,
             "rendered_slide_types": rendered_slide_types,
+            "ignored_fields": ignored_fields,
             "warnings": warnings,
             "quality": quality,
             "next_step": "Call export_presentation with this presentation_id to save and get a download_url.",
