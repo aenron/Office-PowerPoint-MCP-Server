@@ -119,6 +119,23 @@ def register_workflow_tools(
                     "success": (54, 125, 118),
                 },
             },
+            "academic_default": {
+                "name": "学术默认主题",
+                "description": "Academic default theme derived from templates/智算专家会.pptx with deep technology blue accents.",
+                "font_name": "Microsoft YaHei",
+                "colors": {
+                    "background": (245, 247, 250),
+                    "surface": (255, 255, 255),
+                    "primary": (10, 42, 84),
+                    "secondary": (80, 80, 80),
+                    "accent": (74, 144, 226),
+                    "muted": (110, 116, 122),
+                    "line": (222, 224, 227),
+                    "light": (232, 241, 251),
+                    "danger": (237, 125, 49),
+                    "success": (80, 150, 120),
+                },
+            },
         }
 
     def get_builtin_layouts() -> List[Dict[str, Any]]:
