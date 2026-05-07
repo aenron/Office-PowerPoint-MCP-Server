@@ -1162,6 +1162,130 @@ def register_workflow_tools(
             })
         return ignored
 
+    def build_template_table_data(slide_spec: Dict[str, Any]) -> List[List[str]]:
+        table = slide_spec.get("table") or {}
+        headers = safe_lines(table.get("headers"), 8) if isinstance(table, dict) else []
+        rows = table.get("rows") if isinstance(table, dict) else []
+        normalized_rows: List[List[str]] = []
+        if isinstance(rows, list):
+            for row in rows:
+                if isinstance(row, list):
+                    normalized_rows.append([str(cell) for cell in row])
+                elif isinstance(row, dict):
+                    if headers:
+                        normalized_rows.append([str(row.get(header, "")) for header in headers])
+                    else:
+                        normalized_rows.append([str(value) for value in row.values()])
+                else:
+                    normalized_rows.append([str(row)])
+        if headers:
+            return [headers] + normalized_rows
+        return normalized_rows
+
+    def collect_template_bullet_items(slide_spec: Dict[str, Any]) -> List[str]:
+        items: List[str] = []
+
+        for key in ["questions", "research_questions", "keywords", "contributions", "limitations", "future"]:
+            for line in safe_lines(slide_spec.get(key), 6):
+                if line and line not in items:
+                    items.append(line)
+
+        for section in normalized_sections(slide_spec):
+            section_title = str(section.get("title") or "").strip()
+            section_points = [str(point).strip()
+                              for point in section.get("points") or [] if str(point).strip()]
+            if section_title and not section_points and section_title not in items:
+                items.append(section_title)
+                continue
+            if section_title:
+                combined = f"{section_title}：{section_points[0]}" if section_points else section_title
+                if combined not in items:
+                    items.append(combined)
+                for point in section_points[1:3]:
+                    if point not in items:
+                        items.append(point)
+            else:
+                for point in section_points[:3]:
+                    if point not in items:
+                        items.append(point)
+
+        for line in merge_point_lines(slide_spec, slide_spec.get("statement") or slide_spec.get("text") or slide_spec.get("content")):
+            if line and line not in items:
+                items.append(line)
+
+        return items[:8]
+
+    def adapt_slide_spec_for_template_layout(slide_spec: Dict[str, Any]) -> Dict[str, Any]:
+        adapted = dict(slide_spec or {})
+        rendered_type = infer_slide_type(adapted)
+        adapted["type"] = rendered_type
+        adapted["slide_type"] = rendered_type
+
+        if rendered_type in ("cover", "closing"):
+            subtitle = str(adapted.get("subtitle") or "").strip()
+            content = str(adapted.get("content") or "").strip()
+            if content:
+                adapted["subtitle"] = f"{subtitle}\n{content}".strip() if subtitle else content
+            return adapted
+
+        if rendered_type in ("expert_section",):
+            adapted["slide_type"] = "section"
+            adapted["subtitle"] = adapted.get("subtitle") or adapted.get("tag") or adapted.get("content") or ""
+            return adapted
+
+        if rendered_type in ("table", "literature_matrix"):
+            adapted["slide_type"] = "table"
+            table_data = build_template_table_data(adapted)
+            if not table_data and (adapted.get("literature") or adapted.get("studies")):
+                studies = adapted.get("literature") or adapted.get("studies") or []
+                headers = ["标题", "内容"]
+                rows = []
+                for study in studies[:6]:
+                    if isinstance(study, dict):
+                        study_title = study.get("title") or study.get("author") or study.get("name") or "条目"
+                        study_body = "；".join(merge_point_lines(study, study.get("summary") or study.get("content")))
+                        rows.append([str(study_title), str(study_body)])
+                    else:
+                        rows.append(["条目", str(study)])
+                table_data = [headers] + rows if rows else []
+            adapted["table_data"] = table_data
+            return adapted
+
+        if rendered_type == "comparison":
+            adapted["slide_type"] = "two_column"
+            comparisons = adapted.get("comparisons") or []
+            if comparisons and isinstance(comparisons, list):
+                first = comparisons[0] if len(comparisons) > 0 and isinstance(comparisons[0], dict) else {}
+                second = comparisons[1] if len(comparisons) > 1 and isinstance(comparisons[1], dict) else {}
+                adapted["left_title"] = adapted.get("left_title") or first.get("title") or "左侧"
+                adapted["left_points"] = adapted.get("left_points") or first.get("points") or merge_point_lines(first)
+                adapted["right_title"] = adapted.get("right_title") or second.get("title") or "右侧"
+                adapted["right_points"] = adapted.get("right_points") or second.get("points") or merge_point_lines(second)
+            return adapted
+
+        if rendered_type in ("timeline", "process", "expert_path"):
+            adapted["slide_type"] = "timeline"
+            milestones = adapted.get("steps") or adapted.get("items") or adapted.get("sections") or []
+            adapted["milestones"] = milestones
+            return adapted
+
+        if rendered_type == "expert_split":
+            adapted["slide_type"] = "image_text"
+            if not adapted.get("content"):
+                adapted["content"] = "\n".join(collect_template_bullet_items(adapted)[:4])
+            return adapted
+
+        if rendered_type == "quote":
+            adapted["slide_type"] = "summary"
+            adapted["items"] = collect_template_bullet_items(adapted)
+            return adapted
+
+        adapted["slide_type"] = "summary" if rendered_type in ("summary", "research_questions") else "bullet"
+        adapted["items"] = collect_template_bullet_items(adapted)
+        if not adapted.get("content") and adapted.get("items"):
+            adapted["content"] = "\n".join([f"- {item}" for item in adapted["items"][:6]])
+        return adapted
+
     def render_cover_slide(
         presentation,
         slide_spec: Dict[str, Any],
@@ -3165,6 +3289,12 @@ def register_workflow_tools(
             "common_slide_fields": ["type", "title", "points", "source_note"],
             "compatible_content_fields": ["evidence", "explanation", "analysis", "result", "conclusion", "mechanism", "boundary"],
             "compatible_source_fields": ["source_refs", "source", "source_text", "citation", "reference"],
+            "template_support": {
+                "supported": True,
+                "selection_argument": "template_name",
+                "discovery_tool": "list_templates",
+                "note": "When template_name is provided to generate_presentation, slides are rendered onto the selected PPTX template using placeholder/layout mapping with dynamic fallback.",
+            },
             "auto_split_rules": {
                 "table": "Split table rows into multiple slides when rows exceed 6.",
                 "literature_matrix": "Split literature/studies/items into multiple slides when rows exceed 6.",
@@ -3185,6 +3315,7 @@ def register_workflow_tools(
         title: str,
         subtitle: str = "",
         slides: List[Dict[str, Any]] = [],
+        template_name: str = "",
         theme: str = "business_blue",
         density: str = "standard",
         overflow: str = "shrink_then_truncate",
@@ -3199,7 +3330,7 @@ def register_workflow_tools(
         footer_text: str = "",
         output_name: str = "",
     ) -> Dict[str, Any]:
-        """Generate a complete PPT directly with python-pptx, without using a template.
+        """Generate a complete PPT directly with python-pptx, optionally using a named PPTX template.
 
         Supported slide types: cover, summary, cards, comparison, process,
         timeline, metrics, architecture, table, quote, and closing.
@@ -3210,8 +3341,21 @@ def register_workflow_tools(
             presentation_id = f"deck_{slugify(title)}"
 
         effective_theme_id, theme_spec = get_theme(theme)
-        presentation = ppt_utils.create_presentation()
-        effective_page_size = apply_page_size(presentation, page_size)
+        resolved_template_path = None
+        template_resolution: Dict[str, Any] = {}
+        if template_name:
+            resolved_template_path, template_resolution = resolve_template_reference({
+                "template_name": template_name,
+            })
+            if not resolved_template_path:
+                return {"error": template_resolution.get("error", f"Template not found: {template_name}")}
+
+        presentation = (
+            ppt_utils.create_presentation_from_template(resolved_template_path)
+            if resolved_template_path else
+            ppt_utils.create_presentation()
+        )
+        effective_page_size = apply_page_size(presentation, page_size) if not resolved_template_path else page_size
 
         if hasattr(ppt_utils, "set_core_properties"):
             ppt_utils.set_core_properties(presentation, title=title)
@@ -3234,28 +3378,54 @@ def register_workflow_tools(
         rendered_slide_types = []
         ignored_fields = []
         warnings: List[str] = []
-        for index, slide_spec in enumerate(slide_specs):
-            if not isinstance(slide_spec, dict):
-                slide_spec = {"type": "summary", "title": str(slide_spec)}
-            slide_spec = normalize_slide_spec(slide_spec, title, subtitle)
-            if index == 0:
-                slide_spec.setdefault("title", title)
-                slide_spec.setdefault("subtitle", subtitle)
-            slide_density = (slide_spec.get("density")
-                             or density or "standard").strip().lower()
-            slide_overflow = (slide_spec.get(
-                "overflow") or overflow or "shrink_then_truncate").strip().lower()
-            rendered_type = render_generated_slide(
-                presentation,
-                slide_spec,
-                theme_spec,
-                slide_density,
-                slide_overflow,
-                warnings,
-            )
-            rendered_slide_types.append(rendered_type)
-            ignored_fields.extend(collect_ignored_fields(
-                slide_spec, rendered_type, index + 1))
+        if resolved_template_path:
+            clear_all_slides(presentation)
+            template_rendering = {
+                "use_template_sample_slides": False,
+                "placeholder_fill_policy": "prefer_placeholders",
+                "layout_selection_policy": "preferred_then_best_match",
+            }
+            for index, slide_spec in enumerate(slide_specs):
+                if not isinstance(slide_spec, dict):
+                    slide_spec = {"type": "summary", "title": str(slide_spec)}
+                slide_spec = normalize_slide_spec(slide_spec, title, subtitle)
+                if index == 0:
+                    slide_spec.setdefault("title", title)
+                    slide_spec.setdefault("subtitle", subtitle)
+                adapted_spec = adapt_slide_spec_for_template_layout(slide_spec)
+                result = render_slide_from_spec(
+                    presentation,
+                    adapted_spec,
+                    template_rendering,
+                    index,
+                )
+                rendered_slide_types.append(slide_spec.get("type") or infer_slide_type(slide_spec))
+                warnings.extend(result["warnings"])
+                ignored_fields.extend(collect_ignored_fields(
+                    slide_spec, slide_spec.get("type") or infer_slide_type(slide_spec), index + 1))
+        else:
+            for index, slide_spec in enumerate(slide_specs):
+                if not isinstance(slide_spec, dict):
+                    slide_spec = {"type": "summary", "title": str(slide_spec)}
+                slide_spec = normalize_slide_spec(slide_spec, title, subtitle)
+                if index == 0:
+                    slide_spec.setdefault("title", title)
+                    slide_spec.setdefault("subtitle", subtitle)
+                slide_density = (slide_spec.get("density")
+                                 or density or "standard").strip().lower()
+                slide_overflow = (slide_spec.get(
+                    "overflow") or overflow or "shrink_then_truncate").strip().lower()
+                rendered_type = render_generated_slide(
+                    presentation,
+                    slide_spec,
+                    theme_spec,
+                    slide_density,
+                    slide_overflow,
+                    warnings,
+                )
+                rendered_slide_types.append(rendered_type)
+                ignored_fields.extend(collect_ignored_fields(
+                    slide_spec, rendered_type, index + 1))
 
         effective_footer_text = footer_text or title
         add_deck_footer(
@@ -3275,6 +3445,8 @@ def register_workflow_tools(
             "output_name": output_name or f"{slugify(title)}.pptx",
             "generation_mode": "direct_python_pptx",
             "theme": effective_theme_id,
+            "template_name": template_name,
+            "resolved_template_path": resolved_template_path,
             "density": density,
             "overflow": overflow,
             "style": normalized_style,
@@ -3289,6 +3461,15 @@ def register_workflow_tools(
             "title": title,
             "slide_count": len(presentation.slides),
             "theme": effective_theme_id,
+            "template_name": template_name,
+            "resolved_template": (
+                {
+                    "template_name": os.path.basename(resolved_template_path),
+                    "template_path": resolved_template_path,
+                    "selection_method": template_resolution.get("selection_method"),
+                }
+                if resolved_template_path else None
+            ),
             "style": normalized_style,
             "visual_level": normalized_visual_level,
             "page_size": effective_page_size,
