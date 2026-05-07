@@ -1010,7 +1010,7 @@ def register_workflow_tools(
             height - 0.82,
             body_text,
             theme,
-            10 if density != "spacious" else 11,
+            12,
             "secondary",
             density=density,
             overflow=overflow,
@@ -1180,8 +1180,8 @@ def register_workflow_tools(
         add_text(slide, 0.82, 3.0, 7.8, 0.8, subtitle, theme, 15, "secondary", density=density,
                  overflow=overflow, min_font_size=10, warnings=warnings, context="cover subtitle")
         if slide_spec.get("content") and slide_spec.get("subtitle"):
-            add_text(slide, 0.82, 4.12, 7.8, 0.9, slide_spec.get("content"), theme, 10, "muted",
-                     density=density, overflow=overflow, min_font_size=8, warnings=warnings, context="cover content")
+            add_text(slide, 0.82, 4.12, 7.8, 0.9, slide_spec.get("content"), theme, 12, "muted",
+                     density=density, overflow=overflow, min_font_size=10, warnings=warnings, context="cover content")
         add_rect(slide, 9.6, 0.0, 3.7, 7.5, theme_color(theme, "primary"))
         add_rect(slide, 10.1, 1.15, 2.35, 0.72,
                  theme_color(theme, "accent"), radius=True)
@@ -1306,7 +1306,7 @@ def register_workflow_tools(
                      f"{index + 1:02d}", theme, 16, "surface", True, "center")
             add_text(slide, left + 0.82, y + 0.15, 1.68, 0.35, step["title"], theme, fit_text_size(
                 step["title"], 12, 9, 9), "surface", True, density=density, overflow=overflow, warnings=warnings, context="process step title")
-            add_text(slide, left, y + 1.05, step_width, 1.45, "\n".join(step["points"][:3]), theme, 10, "secondary",
+            add_text(slide, left, y + 1.05, step_width, 1.45, "\n".join(step["points"][:3]), theme, 12, "secondary",
                      alignment="center", density=density, overflow=overflow, warnings=warnings, context="process step body")
             if index < len(steps) - 1:
                 add_text(slide, left + step_width + 0.16, y + 0.2, 0.28,
@@ -1337,7 +1337,7 @@ def register_workflow_tools(
                      density=density, overflow=overflow, warnings=warnings, context="timeline phase")
             add_text(slide, left - 0.55, 3.95, 1.65, 0.4, step["title"], theme, 11, "primary", True,
                      "center", density=density, overflow=overflow, warnings=warnings, context="timeline title")
-            add_text(slide, left - 0.75, 4.48, 2.0, 0.95, "\n".join(step["points"][:2]), theme, 9, "secondary",
+            add_text(slide, left - 0.75, 4.48, 2.0, 0.95, "\n".join(step["points"][:2]), theme, 11, "secondary",
                      alignment="center", density=density, overflow=overflow, warnings=warnings, context="timeline detail")
 
     def render_metrics_slide(
@@ -1361,11 +1361,11 @@ def register_workflow_tools(
             add_rect(slide, left, top, 3.75, 1.85, theme_color(
                 theme, "surface"), theme_color(theme, "line"), True)
             add_text(slide, left + 0.25, top + 0.22, 1.15, 0.3, metric.get("label") or metric.get("title") or "",
-                     theme, 10, "muted", True, density=density, overflow=overflow, warnings=warnings, context="metric label")
+                     theme, 11, "muted", True, density=density, overflow=overflow, warnings=warnings, context="metric label")
             add_text(slide, left + 0.25, top + 0.58, 2.45, 0.55, metric.get("value") or metric.get("number") or "", theme, 24,
                      "accent", True, density=density, overflow=overflow, min_font_size=16, warnings=warnings, context="metric value")
             add_text(slide, left + 0.25, top + 1.22, 3.15, 0.42, metric.get("note") or metric.get("description") or "",
-                     theme, 9, "secondary", density=density, overflow=overflow, warnings=warnings, context="metric note")
+                     theme, 11, "secondary", density=density, overflow=overflow, warnings=warnings, context="metric note")
 
     def render_architecture_slide(
         presentation,
@@ -1397,8 +1397,8 @@ def register_workflow_tools(
                 item_left = 3.35 + item_index * 1.65
                 add_rect(slide, item_left, top + 0.22, 1.35, 0.42, theme_color(theme, "primary")
                          if item_index % 2 == 0 else theme_color(theme, "secondary"), radius=True)
-                add_text(slide, item_left + 0.08, top + 0.31, 1.18, 0.18, item, theme, 8, "surface", True, "center",
-                         density=density, overflow=overflow, min_font_size=7, warnings=warnings, context="architecture item")
+                add_text(slide, item_left + 0.08, top + 0.31, 1.18, 0.18, item, theme, 10, "surface", True, "center",
+                         density=density, overflow=overflow, min_font_size=10, warnings=warnings, context="architecture item")
 
     def render_table_slide(
         presentation,
@@ -1424,7 +1424,7 @@ def register_workflow_tools(
         for col, header in enumerate(headers):
             add_rect(slide, 0.85 + col * col_width, top, col_width, row_height,
                      theme_color(theme, "primary"), theme_color(theme, "line"))
-            add_text(slide, 0.94 + col * col_width, top + 0.14, col_width - 0.18, 0.22, header, theme, 9, "surface",
+            add_text(slide, 0.94 + col * col_width, top + 0.14, col_width - 0.18, 0.22, header, theme, 11, "surface",
                      True, "center", density=density, overflow=overflow, warnings=warnings, context="table header")
         for row_index, row in enumerate(rows):
             for col, header in enumerate(headers):
@@ -1433,8 +1433,8 @@ def register_workflow_tools(
                 y = top + row_height * (row_index + 1)
                 add_rect(slide, 0.85 + col * col_width, y, col_width, row_height,
                          theme_color(theme, "surface"), theme_color(theme, "line"))
-                add_text(slide, 0.94 + col * col_width, y + 0.13, col_width - 0.18, 0.24, value, theme, 8, "secondary",
-                         alignment="center", density=density, overflow=overflow, min_font_size=7, warnings=warnings, context="table cell")
+                add_text(slide, 0.94 + col * col_width, y + 0.13, col_width - 0.18, 0.24, value, theme, 10, "secondary",
+                         alignment="center", density=density, overflow=overflow, min_font_size=10, warnings=warnings, context="table cell")
 
     def render_literature_matrix_slide(
         presentation,
@@ -1491,11 +1491,11 @@ def register_workflow_tools(
         background = slide_spec.get("background") or slide_spec.get("statement") or ""
         context = slide_spec.get("context") or ""
         if background:
-            add_text(slide, 0.85, 1.38, 11.65, 0.34, background, theme, 10, "secondary", density=density,
+            add_text(slide, 0.85, 1.38, 11.65, 0.34, background, theme, 12, "secondary", density=density,
                       overflow=overflow, warnings=warnings, context="research question background")
         if context:
-            add_text(slide, 0.85, 1.76, 11.65, 0.42, context, theme, 9, "muted", density=density,
-                     overflow=overflow, min_font_size=8, warnings=warnings, context="research question context")
+            add_text(slide, 0.85, 1.76, 11.65, 0.42, context, theme, 11, "muted", density=density,
+                     overflow=overflow, min_font_size=10, warnings=warnings, context="research question context")
         questions = trim_items(safe_lines(slide_spec.get("questions") or slide_spec.get(
             "research_questions") or slide_spec.get("items"), 6), 4, warnings, "research questions")
         top = 2.36 if context else 2.05
@@ -1516,8 +1516,8 @@ def register_workflow_tools(
                 theme, "light"), theme_color(theme, "line"), True)
             add_text(slide, 1.12, 6.18, 1.0, 0.24, "研究缺口", theme, 10, "accent", True,
                       density=density, overflow=overflow, warnings=warnings, context="research gap label")
-            add_text(slide, 2.25, 6.12, 9.62, 0.42, gap, theme, 9, "secondary",
-                     density=density, overflow=overflow, min_font_size=8, warnings=warnings, context="research gap")
+            add_text(slide, 2.25, 6.12, 9.62, 0.42, gap, theme, 11, "secondary",
+                     density=density, overflow=overflow, min_font_size=10, warnings=warnings, context="research gap")
 
     def render_theoretical_framework_slide(
         presentation,
@@ -1546,8 +1546,8 @@ def register_workflow_tools(
             add_rect(slide, left, y, width, 0.14, theme_color(theme, "accent"))
             add_text(slide, left + 0.12, y + 0.24, width - 0.24, 0.44, concept["title"], theme, 10, "primary",
                      True, "center", density=density, overflow=overflow, min_font_size=8, warnings=warnings, context="framework concept")
-            add_text(slide, left + 0.12, y + 0.78, width - 0.24, 0.55, "\n".join(concept["points"][:2]), theme, 8, "secondary",
-                      alignment="center", density=density, overflow=overflow, min_font_size=7, warnings=warnings, context="framework concept detail")
+            add_text(slide, left + 0.12, y + 0.78, width - 0.24, 0.55, "\n".join(concept["points"][:2]), theme, 10, "secondary",
+                      alignment="center", density=density, overflow=overflow, min_font_size=10, warnings=warnings, context="framework concept detail")
             if index < len(concepts) - 1:
                 add_text(slide, left + width + 0.1, y + 0.43, 0.35,
                          0.28, ">", theme, 18, "accent", True, "center")
@@ -1623,7 +1623,7 @@ def register_workflow_tools(
             add_text(slide, left + 0.9, top + 0.24, 3.95, 0.32, step["title"], theme, 13, "primary",
                      True, density=density, overflow=overflow, warnings=warnings, context="method step title")
             add_text(slide, left + 0.9, top + 0.78, 3.95, 0.68, "\n".join([f"- {line}" for line in step["points"][:3]]),
-                     theme, 9, "secondary", density=density, overflow=overflow, warnings=warnings, context="method step body")
+                     theme, 11, "secondary", density=density, overflow=overflow, warnings=warnings, context="method step body")
 
     def render_findings_slide(
         presentation,
@@ -1760,7 +1760,7 @@ def register_workflow_tools(
                      alignment="center", density=density, overflow=overflow, warnings=warnings, context="expert section subtitle")
         tag = slide_spec.get("tag")
         if tag:
-            add_text(slide, 0.0, 5.05, 13.333, 0.36, tag, theme, 9, "muted",
+            add_text(slide, 0.0, 5.05, 13.333, 0.36, tag, theme, 11, "muted",
                      alignment="center", density=density, overflow=overflow, warnings=warnings, context="expert section tag")
 
     def render_expert_title_content_slide(
@@ -1792,7 +1792,7 @@ def register_workflow_tools(
             add_text(slide, left + 0.22, top + 0.18, 4.8, 0.3, section["title"], theme, 13, "primary",
                      True, density=density, overflow=overflow, warnings=warnings, context="expert content block title")
             add_text(slide, left + 0.22, top + 0.62, 4.85, 0.7, "\n".join([f"- {line}" for line in section["points"][:3]]),
-                     theme, 9, "secondary", density=density, overflow=overflow, warnings=warnings, context="expert content block body")
+                     theme, 11, "secondary", density=density, overflow=overflow, warnings=warnings, context="expert content block body")
 
     def render_expert_split_slide(
         presentation,
@@ -1823,7 +1823,7 @@ def register_workflow_tools(
             add_text(slide, 6.75, top, 4.9, 0.3, section["title"], theme, 13, "primary", True,
                      density=density, overflow=overflow, warnings=warnings, context="expert split title")
             add_text(slide, 6.75, top + 0.38, 5.05, 0.55, "\n".join([f"- {line}" for line in section["points"][:2]]),
-                     theme, 9, "secondary", density=density, overflow=overflow, warnings=warnings, context="expert split body")
+                     theme, 11, "secondary", density=density, overflow=overflow, warnings=warnings, context="expert split body")
             add_rect(slide, 6.48, top + 0.06, 0.08, 0.72, theme_color(theme, "accent"))
 
     def render_expert_path_slide(
@@ -1847,7 +1847,7 @@ def register_workflow_tools(
             add_text(slide, 1.05, y + 0.05, 4.25, 0.26, step["title"], theme, 12, "primary", True,
                      density=density, overflow=overflow, warnings=warnings, context="expert path title")
             detail = "；".join(step["points"][:2])
-            add_text(slide, 6.85, y + 0.02, 5.05, 0.35, detail, theme, 9, "secondary",
+            add_text(slide, 6.85, y + 0.02, 5.05, 0.35, detail, theme, 11, "secondary",
                      density=density, overflow=overflow, warnings=warnings, context="expert path detail")
 
     def render_expert_scope_slide(
@@ -1870,7 +1870,7 @@ def register_workflow_tools(
             add_rect(slide, 1.25, top, 0.12, 0.9, theme_color(theme, "accent"))
             add_text(slide, 1.62, top + 0.18, 2.7, 0.26, item["title"], theme, 13, "primary", True,
                      density=density, overflow=overflow, warnings=warnings, context="expert scope title")
-            add_text(slide, 4.55, top + 0.15, 6.9, 0.42, "；".join(item["points"][:2]), theme, 10, "secondary",
+            add_text(slide, 4.55, top + 0.15, 6.9, 0.42, "；".join(item["points"][:2]), theme, 12, "secondary",
                      density=density, overflow=overflow, warnings=warnings, context="expert scope detail")
 
     def render_generated_slide(
