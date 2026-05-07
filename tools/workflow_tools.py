@@ -3261,6 +3261,15 @@ def register_workflow_tools(
     )
     def list_presentation_options() -> Dict[str, Any]:
         """List available visual themes and slide layout schemas for direct presentation generation."""
+        template_summaries = []
+        for template_path in collect_template_files():
+            template_name = os.path.basename(template_path)
+            template_summaries.append({
+                "template_name": template_name,
+                "template_id": slugify(os.path.splitext(template_name)[0]),
+                "template_path": template_path,
+            })
+
         return {
             "themes": [
                 {
@@ -3289,10 +3298,12 @@ def register_workflow_tools(
             "common_slide_fields": ["type", "title", "points", "source_note"],
             "compatible_content_fields": ["evidence", "explanation", "analysis", "result", "conclusion", "mechanism", "boundary"],
             "compatible_source_fields": ["source_refs", "source", "source_text", "citation", "reference"],
+            "templates": template_summaries,
+            "template_names": [item["template_name"] for item in template_summaries],
             "template_support": {
                 "supported": True,
                 "selection_argument": "template_name",
-                "discovery_tool": "list_templates",
+                "discovery_tool": "list_presentation_options",
                 "note": "When template_name is provided to generate_presentation, slides are rendered onto the selected PPTX template using placeholder/layout mapping with dynamic fallback.",
             },
             "auto_split_rules": {
