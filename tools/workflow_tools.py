@@ -3267,7 +3267,6 @@ def register_workflow_tools(
             template_summaries.append({
                 "template_name": template_name,
                 "template_id": slugify(os.path.splitext(template_name)[0]),
-                "template_path": template_path,
             })
 
         return {
