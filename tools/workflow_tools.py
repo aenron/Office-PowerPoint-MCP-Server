@@ -119,9 +119,9 @@ def register_workflow_tools(
                     "success": (54, 125, 118),
                 },
             },
-            "academic_default": {
-                "name": "学术默认主题",
-                "description": "Academic default theme derived from templates/智算专家会.pptx with deep technology blue accents.",
+            "expert_forum_blue": {
+                "name": "Expert Forum Blue",
+                "description": "Academic technology theme derived from templates/智算专家会.pptx with deep blue accents.",
                 "font_name": "Microsoft YaHei",
                 "colors": {
                     "background": (245, 247, 250),
@@ -427,7 +427,7 @@ def register_workflow_tools(
                 },
             },
             {
-                "layout_id": "expert_title_content",
+                "layout_id": "expert_card_overview",
                 "name": "智算标题内容页",
                 "description": "Top-centered title layout with open content blocks, matching the expert forum deck rhythm.",
                 "use_when": "Use for overview, explanation, and normal content pages.",
@@ -441,7 +441,7 @@ def register_workflow_tools(
                 },
             },
             {
-                "layout_id": "expert_split",
+                "layout_id": "expert_image_text",
                 "name": "智算左右图文页",
                 "description": "Large left visual area plus right explanatory stack, based on the case-study pages in the template.",
                 "use_when": "Use for case pages, scenario explanation, and image-plus-text evidence.",
@@ -455,7 +455,7 @@ def register_workflow_tools(
                 },
             },
             {
-                "layout_id": "expert_path",
+                "layout_id": "expert_process_path",
                 "name": "智算流程路径页",
                 "description": "Six-step implementation path with a central numbered rail and side explanations.",
                 "use_when": "Use for scenario implementation paths, process methods, or staged logic.",
@@ -469,7 +469,7 @@ def register_workflow_tools(
                 },
             },
             {
-                "layout_id": "expert_scope",
+                "layout_id": "expert_scope_list",
                 "name": "智算范围清单页",
                 "description": "Vertical scope list inspired by the security-scope slide in the template.",
                 "use_when": "Use for scope, safeguards, checklist, policy coverage, or risk categories.",
@@ -483,7 +483,7 @@ def register_workflow_tools(
                 },
             },
             {
-                "layout_id": "expert_text_panel",
+                "layout_id": "expert_body_panel",
                 "name": "智算正文解析页",
                 "description": "Left-aligned title with a left insight card and right-side body text panel for method explanation pages.",
                 "use_when": "Use for module analysis, method explanation, mechanism interpretation, and long-form technical content.",
@@ -497,7 +497,7 @@ def register_workflow_tools(
                 },
             },
             {
-                "layout_id": "party_work_summary",
+                "layout_id": "party_summary_panel",
                 "name": "党建工作总结页",
                 "description": "Party-building work summary layout with red header, statement band, and three to four work focus blocks.",
                 "use_when": "Use for party-building annual summaries, chapter content pages, rectification progress, and key work reports.",
@@ -516,7 +516,11 @@ def register_workflow_tools(
 
     def get_theme(theme_id: str) -> Tuple[str, Dict[str, Any]]:
         themes = get_builtin_themes()
-        effective_theme_id = theme_id if theme_id in themes else "business_blue"
+        theme_aliases = {
+            "academic_default": "expert_forum_blue",
+        }
+        resolved_theme_id = theme_aliases.get(theme_id, theme_id)
+        effective_theme_id = resolved_theme_id if resolved_theme_id in themes else "business_blue"
         return effective_theme_id, themes[effective_theme_id]
 
     def rgb(value: Tuple[int, int, int]) -> RGBColor:
@@ -1140,12 +1144,18 @@ def register_workflow_tools(
                 "finding": "findings",
                 "contribution": "contribution_limitations",
                 "academic_default_section": "expert_section",
-                "academic_default_content": "expert_title_content",
-                "academic_default_split": "expert_split",
-                "academic_default_path": "expert_path",
-                "academic_default_scope": "expert_scope",
-                "party_summary": "party_work_summary",
-                "party_work": "party_work_summary",
+                "academic_default_content": "expert_card_overview",
+                "academic_default_split": "expert_image_text",
+                "academic_default_path": "expert_process_path",
+                "academic_default_scope": "expert_scope_list",
+                "expert_title_content": "expert_card_overview",
+                "expert_split": "expert_image_text",
+                "expert_path": "expert_process_path",
+                "expert_scope": "expert_scope_list",
+                "expert_text_panel": "expert_body_panel",
+                "party_work_summary": "party_summary_panel",
+                "party_summary": "party_summary_panel",
+                "party_work": "party_summary_panel",
             }
             return aliases.get(explicit, explicit)
         if slide_spec.get("questions") or slide_spec.get("research_questions"):
@@ -1310,13 +1320,13 @@ def register_workflow_tools(
                 adapted["right_points"] = adapted.get("right_points") or second.get("points") or merge_point_lines(second)
             return adapted
 
-        if rendered_type in ("timeline", "process", "expert_path"):
+        if rendered_type in ("timeline", "process", "expert_process_path"):
             adapted["slide_type"] = "timeline"
             milestones = adapted.get("steps") or adapted.get("items") or adapted.get("sections") or []
             adapted["milestones"] = milestones
             return adapted
 
-        if rendered_type == "expert_split":
+        if rendered_type == "expert_image_text":
             adapted["slide_type"] = "image_text"
             if not adapted.get("content"):
                 adapted["content"] = "\n".join(collect_template_bullet_items(adapted)[:4])
@@ -2168,22 +2178,22 @@ def register_workflow_tools(
         elif slide_type == "expert_section":
             render_expert_section_slide(
                 presentation, slide_spec, theme, density, overflow, warnings)
-        elif slide_type == "expert_title_content":
+        elif slide_type == "expert_card_overview":
             render_expert_title_content_slide(
                 presentation, slide_spec, theme, density, overflow, warnings)
-        elif slide_type == "expert_split":
+        elif slide_type == "expert_image_text":
             render_expert_split_slide(
                 presentation, slide_spec, theme, density, overflow, warnings)
-        elif slide_type == "expert_path":
+        elif slide_type == "expert_process_path":
             render_expert_path_slide(
                 presentation, slide_spec, theme, density, overflow, warnings)
-        elif slide_type == "expert_scope":
+        elif slide_type == "expert_scope_list":
             render_expert_scope_slide(
                 presentation, slide_spec, theme, density, overflow, warnings)
-        elif slide_type == "expert_text_panel":
+        elif slide_type == "expert_body_panel":
             render_expert_text_panel_slide(
                 presentation, slide_spec, theme, density, overflow, warnings)
-        elif slide_type == "party_work_summary":
+        elif slide_type == "party_summary_panel":
             render_party_work_summary_slide(
                 presentation, slide_spec, theme, density, overflow, warnings)
         elif slide_type in {"comparison"}:

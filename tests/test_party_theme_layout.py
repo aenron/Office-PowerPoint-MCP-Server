@@ -15,8 +15,16 @@ class PartyThemeLayoutTests(unittest.TestCase):
         layout_ids = {layout["layout_id"] for layout in options["layouts"]}
 
         self.assertIn("party_red", theme_ids)
-        self.assertIn("party_work_summary", layout_ids)
-        self.assertIn("expert_text_panel", layout_ids)
+        self.assertIn("expert_forum_blue", theme_ids)
+        self.assertNotIn("academic_default", theme_ids)
+        self.assertIn("party_summary_panel", layout_ids)
+        self.assertIn("expert_body_panel", layout_ids)
+        self.assertIn("expert_card_overview", layout_ids)
+        self.assertIn("expert_image_text", layout_ids)
+        self.assertIn("expert_process_path", layout_ids)
+        self.assertIn("expert_scope_list", layout_ids)
+        self.assertNotIn("party_work_summary", layout_ids)
+        self.assertNotIn("expert_text_panel", layout_ids)
 
     def test_party_work_summary_can_be_rendered(self):
         result = call_tool(
@@ -30,7 +38,7 @@ class PartyThemeLayoutTests(unittest.TestCase):
             show_page_number=False,
             slides=[
                 {
-                    "type": "party_work_summary",
+                    "type": "party_summary_panel",
                     "title": "党建工作推进情况",
                     "statement": "围绕组织建设、思想引领、作风提升和服务群众形成闭环推进。",
                     "items": [
@@ -43,21 +51,21 @@ class PartyThemeLayoutTests(unittest.TestCase):
         )
 
         self.assertEqual(result["theme"], "party_red")
-        self.assertEqual(result["rendered_slide_types"], ["party_work_summary"])
+        self.assertEqual(result["rendered_slide_types"], ["party_summary_panel"])
         self.assertEqual(result["slide_count"], 1)
 
-    def test_expert_text_panel_can_be_rendered(self):
+    def test_expert_body_panel_can_be_rendered(self):
         result = call_tool(
             "generate_presentation",
             presentation_id="test_expert_text_panel",
             title="模块解析页",
-            theme="academic_default",
+            theme="expert_forum_blue",
             auto_cover=False,
             show_footer=False,
             show_page_number=False,
             slides=[
                 {
-                    "type": "expert_text_panel",
+                    "type": "expert_body_panel",
                     "title": "C3k2_MCA：增强小目标缺陷感知能力",
                     "statement": "这是页头摘要。",
                     "panel_title": "核心观点",
@@ -68,13 +76,40 @@ class PartyThemeLayoutTests(unittest.TestCase):
             ],
         )
 
-        self.assertEqual(result["rendered_slide_types"], ["expert_text_panel"])
+        self.assertEqual(result["rendered_slide_types"], ["expert_body_panel"])
         presentation = ppt_mcp_server.presentations["test_expert_text_panel"]
         slide = presentation.slides[0]
         texts = [shape.text.strip() for shape in slide.shapes if getattr(shape, "has_text_frame", False) and shape.text.strip()]
         self.assertIn("核心观点", texts)
         self.assertIn("详细说明", texts)
         self.assertTrue(any("第一段正文" in text for text in texts))
+
+    def test_legacy_ids_still_work(self):
+        result = call_tool(
+            "generate_presentation",
+            presentation_id="test_legacy_ids",
+            title="兼容性测试",
+            theme="academic_default",
+            auto_cover=False,
+            show_footer=False,
+            show_page_number=False,
+            slides=[
+                {
+                    "type": "expert_text_panel",
+                    "title": "旧版式兼容",
+                    "panel_points": ["说明一"],
+                    "body_paragraphs": ["第一段正文。"],
+                },
+                {
+                    "type": "party_work_summary",
+                    "title": "旧党建页兼容",
+                    "items": [{"title": "组织建设", "points": ["说明一"]}],
+                },
+            ],
+        )
+
+        self.assertEqual(result["theme"], "expert_forum_blue")
+        self.assertEqual(result["rendered_slide_types"], ["expert_body_panel", "party_summary_panel"])
 
 
 class ThemeBackgroundTests(unittest.TestCase):
