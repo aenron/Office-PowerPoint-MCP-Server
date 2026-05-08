@@ -88,6 +88,210 @@ class PartyThemeLayoutTests(unittest.TestCase):
         self.assertIn("详细说明", texts)
         self.assertTrue(any("第一段正文" in text for text in texts))
 
+    def test_expert_body_panel_does_not_invent_panel_title(self):
+        call_tool(
+            "generate_presentation",
+            presentation_id="test_expert_body_panel_without_default_core_view",
+            title="模块解析页",
+            theme="expert_forum_blue",
+            auto_cover=False,
+            show_footer=False,
+            show_page_number=False,
+            slides=[
+                {
+                    "type": "expert_body_panel",
+                    "title": "SBA：增强边界特征与语义特征融合",
+                    "statement": "这是页头摘要。",
+                    "panel_points": ["说明一", "说明二"],
+                    "body_paragraphs": ["第一段正文。", "第二段正文。"],
+                }
+            ],
+        )
+
+        presentation = ppt_mcp_server.presentations["test_expert_body_panel_without_default_core_view"]
+        slide = presentation.slides[0]
+        texts = [shape.text.strip() for shape in slide.shapes if getattr(shape, "has_text_frame", False) and shape.text.strip()]
+        self.assertNotIn("核心观点", texts)
+        self.assertTrue(any("说明一" in text for text in texts))
+
+    def test_expert_card_overview_does_not_invent_section_title(self):
+        call_tool(
+            "generate_presentation",
+            presentation_id="test_expert_card_overview_without_default_core_view",
+            title="专题页测试",
+            theme="expert_forum_blue",
+            auto_cover=False,
+            show_footer=False,
+            show_page_number=False,
+            slides=[
+                {
+                    "type": "expert_card_overview",
+                    "title": "SBA：增强边界特征与语义特征融合",
+                    "items": ["边界增强", "语义融合"],
+                }
+            ],
+        )
+
+        presentation = ppt_mcp_server.presentations["test_expert_card_overview_without_default_core_view"]
+        slide = presentation.slides[0]
+        texts = [shape.text.strip() for shape in slide.shapes if getattr(shape, "has_text_frame", False) and shape.text.strip()]
+        self.assertNotIn("核心观点", texts)
+        self.assertTrue(any("边界增强" in text for text in texts))
+
+    def test_layouts_do_not_invent_content_labels(self):
+        unwanted_labels = {
+            "核心观点",
+            "核心内容",
+            "核心结论",
+            "对比项",
+            "优化后",
+            "现状/痛点",
+            "目标/方案",
+            "核心概念",
+            "关系假设 / 分析命题",
+            "总体框架",
+            "重点工作",
+            "数据来源",
+            "样本范围",
+            "变量设计",
+            "分析方法",
+            "研究贡献",
+            "局限与边界",
+            "后续研究方向",
+            "条目",
+            "图示区域",
+            "Left",
+            "Right",
+        }
+        cases = [
+            (
+                "summary",
+                {
+                    "type": "summary",
+                    "title": "汇总页",
+                    "statement": "摘要内容",
+                    "text": "补充说明",
+                },
+            ),
+            (
+                "comparison",
+                {
+                    "type": "comparison",
+                    "title": "对比页",
+                    "comparisons": [{"before": "改造前"}, {"after": "改造后"}],
+                },
+            ),
+            (
+                "quote",
+                {
+                    "type": "quote",
+                    "statement": "结论正文",
+                },
+            ),
+            (
+                "expert_card_overview",
+                {
+                    "type": "expert_card_overview",
+                    "title": "卡片页",
+                    "text": "卡片正文",
+                },
+            ),
+            (
+                "theoretical_framework",
+                {
+                    "type": "theoretical_framework",
+                    "title": "框架页",
+                    "framework": "框架说明",
+                },
+            ),
+            (
+                "party_summary_panel",
+                {
+                    "type": "party_summary_panel",
+                    "title": "党建页",
+                    "text": "党建正文",
+                },
+            ),
+            (
+                "literature_matrix",
+                {
+                    "type": "literature_matrix",
+                    "title": "文献页",
+                    "items": ["文献正文"],
+                },
+            ),
+            (
+                "expert_image_text",
+                {
+                    "type": "expert_image_text",
+                    "title": "图文页",
+                    "items": ["说明正文"],
+                },
+            ),
+            (
+                "method_design",
+                {
+                    "type": "method_design",
+                    "title": "方法页",
+                    "content": "方法正文",
+                },
+            ),
+            (
+                "contribution_limitations",
+                {
+                    "type": "contribution_limitations",
+                    "title": "贡献页",
+                    "contributions": ["贡献内容"],
+                    "limitations": ["局限内容"],
+                    "implications": ["后续内容"],
+                },
+            ),
+        ]
+
+        for layout_id, slide_spec in cases:
+            with self.subTest(layout_id=layout_id):
+                presentation_id = f"test_no_invented_labels_{layout_id}"
+                call_tool(
+                    "generate_presentation",
+                    presentation_id=presentation_id,
+                    title="默认文案检查",
+                    theme="expert_forum_blue",
+                    auto_cover=False,
+                    show_footer=False,
+                    show_page_number=False,
+                    slides=[slide_spec],
+                )
+
+                presentation = ppt_mcp_server.presentations[presentation_id]
+                texts = {
+                    shape.text.strip()
+                    for shape in presentation.slides[0].shapes
+                    if getattr(shape, "has_text_frame", False) and shape.text.strip()
+                }
+                self.assertFalse(unwanted_labels.intersection(texts))
+
+    def test_empty_slide_list_does_not_create_core_view_title(self):
+        call_tool(
+            "generate_presentation",
+            presentation_id="test_empty_slide_list_without_core_view",
+            title="空内容检查",
+            subtitle="只有副标题内容",
+            theme="expert_forum_blue",
+            auto_cover=False,
+            auto_closing=False,
+            show_footer=False,
+            show_page_number=False,
+            slides=[],
+        )
+
+        presentation = ppt_mcp_server.presentations["test_empty_slide_list_without_core_view"]
+        texts = {
+            shape.text.strip()
+            for shape in presentation.slides[0].shapes
+            if getattr(shape, "has_text_frame", False) and shape.text.strip()
+        }
+        self.assertNotIn("核心观点", texts)
+
     def test_legacy_ids_still_work(self):
         result = call_tool(
             "generate_presentation",
