@@ -3466,14 +3466,14 @@ def register_workflow_tools(
             ],
             "academic_recommended_theme": "academic_burgundy",
             "common_slide_fields": ["type", "title", "points", "source_note"],
-            "compatible_content_fields": ["evidence", "explanation", "analysis", "result", "conclusion", "mechanism", "boundary"],
-            "compatible_source_fields": ["source_refs", "source", "source_text", "citation", "reference"],
+            # Keep these aliases nearby for possible future restoration if
+            # callers need broader field-name hints again.
+            # "compatible_content_fields": ["evidence", "explanation", "analysis", "result", "conclusion", "mechanism", "boundary"],
+            # "compatible_source_fields": ["source_refs", "source", "source_text", "citation", "reference"],
             "templates": template_summaries,
-            "template_names": [item["template_name"] for item in template_summaries],
             "template_support": {
                 "supported": True,
                 "selection_argument": "template_name",
-                "discovery_tool": "list_presentation_options",
                 "note": "When template_name is provided to generate_presentation, slides are rendered onto the selected PPTX template using placeholder/layout mapping with dynamic fallback.",
             },
             "auto_split_rules": {

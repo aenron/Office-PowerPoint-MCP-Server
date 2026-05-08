@@ -25,6 +25,10 @@ class PartyThemeLayoutTests(unittest.TestCase):
         self.assertIn("expert_scope_list", layout_ids)
         self.assertNotIn("party_work_summary", layout_ids)
         self.assertNotIn("expert_text_panel", layout_ids)
+        self.assertNotIn("template_names", options)
+        self.assertNotIn("compatible_content_fields", options)
+        self.assertNotIn("compatible_source_fields", options)
+        self.assertNotIn("discovery_tool", options["template_support"])
 
     def test_party_work_summary_can_be_rendered(self):
         result = call_tool(
