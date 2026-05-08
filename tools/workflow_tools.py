@@ -1887,8 +1887,6 @@ def register_workflow_tools(
         warnings: Optional[List[str]] = None,
     ) -> None:
         add_rect(slide, 0, 0, 13.333, 7.5, theme_color(theme, "background"))
-        add_rect(slide, 0, 0, 13.333, 0.16, theme_color(theme, "primary"))
-        add_rect(slide, 0, 0.16, 0.16, 7.34, theme_color(theme, "accent"))
         if kicker:
             add_text(slide, 0.72, 0.34, 3.0, 0.22, kicker,
                      theme, 8, "accent", True, density=density, overflow=overflow, warnings=warnings)
@@ -1906,8 +1904,6 @@ def register_workflow_tools(
     ) -> None:
         slide = make_blank_slide(presentation)
         add_rect(slide, 0, 0, 13.333, 7.5, theme_color(theme, "background"))
-        add_rect(slide, 0, 0, 13.333, 0.18, theme_color(theme, "primary"))
-        add_rect(slide, 0, 7.28, 13.333, 0.22, theme_color(theme, "primary"))
         add_rect(slide, 0.72, 1.25, 1.55, 0.08, theme_color(theme, "accent"))
         title = slide_spec.get("title") or "章节标题"
         subtitle = slide_spec.get("subtitle") or slide_spec.get("content") or ""
@@ -2041,8 +2037,6 @@ def register_workflow_tools(
     ) -> None:
         slide = make_blank_slide(presentation)
         add_rect(slide, 0, 0, 13.333, 7.5, theme_color(theme, "background"))
-        add_rect(slide, 0, 0, 13.333, 0.58, theme_color(theme, "primary"))
-        add_rect(slide, 0, 7.1, 13.333, 0.4, theme_color(theme, "primary"))
         add_rect(slide, 0.65, 0.95, 1.25, 0.08, theme_color(theme, "success"))
         add_text(slide, 0.72, 0.23, 1.9, 0.22, slide_spec.get("tag") or "党建工作",
                  theme, 9, "light", True, density=density, overflow=overflow, warnings=warnings)

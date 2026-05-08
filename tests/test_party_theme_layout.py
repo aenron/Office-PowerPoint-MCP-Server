@@ -47,6 +47,27 @@ class PartyThemeLayoutTests(unittest.TestCase):
 
 
 class ThemeBackgroundTests(unittest.TestCase):
+    def assert_no_edge_bars(self, slide):
+        edge_bars = [
+            shape for shape in slide.shapes
+            if (
+                (
+                    abs(shape.left.inches - 0) < 0.01
+                    and abs(shape.top.inches - 0) < 0.01
+                    and (
+                        (shape.width.inches < 0.3 and shape.height.inches > 7.0)
+                        or (shape.width.inches > 12.5 and shape.height.inches < 0.2)
+                    )
+                )
+                or (
+                    abs(shape.left.inches - 0) < 0.01
+                    and shape.width.inches > 12.5
+                    and shape.height.inches < 0.5
+                )
+            )
+        ]
+        self.assertEqual(edge_bars, [])
+
     def test_generated_theme_background_has_no_edge_bars(self):
         call_tool(
             "generate_presentation",
@@ -66,20 +87,52 @@ class ThemeBackgroundTests(unittest.TestCase):
         )
 
         presentation = ppt_mcp_server.presentations["test_theme_background_without_bars"]
-        slide = presentation.slides[0]
-        edge_bars = [
-            shape for shape in slide.shapes
-            if (
-                abs(shape.left.inches - 0) < 0.01
-                and abs(shape.top.inches - 0) < 0.01
-                and (
-                    (shape.width.inches < 0.3 and shape.height.inches > 7.0)
-                    or (shape.width.inches > 12.5 and shape.height.inches < 0.2)
-                )
-            )
-        ]
+        self.assert_no_edge_bars(presentation.slides[0])
 
-        self.assertEqual(edge_bars, [])
+    def test_expert_layouts_have_no_edge_bars(self):
+        call_tool(
+            "generate_presentation",
+            presentation_id="test_expert_layout_without_bars",
+            title="专题页测试",
+            theme="academic_default",
+            auto_cover=False,
+            show_footer=False,
+            show_page_number=False,
+            slides=[
+                {
+                    "type": "expert_title_content",
+                    "title": "HWD：降低分辨率同时保留细节信息",
+                    "statement": "常规下采样方法会损失边缘和纹理等关键信息。",
+                    "items": [
+                        {"title": "核心观点", "points": ["通过小波变换保留低频与高频信息"]},
+                    ],
+                }
+            ],
+        )
+
+        presentation = ppt_mcp_server.presentations["test_expert_layout_without_bars"]
+        self.assert_no_edge_bars(presentation.slides[0])
+
+    def test_party_layout_has_no_edge_bars(self):
+        call_tool(
+            "generate_presentation",
+            presentation_id="test_party_layout_without_bars",
+            title="党建工作总结",
+            theme="party_red",
+            auto_cover=False,
+            show_footer=False,
+            show_page_number=False,
+            slides=[
+                {
+                    "type": "party_work_summary",
+                    "title": "党建工作推进情况",
+                    "items": [{"title": "组织建设", "points": ["规范支部制度"]}],
+                }
+            ],
+        )
+
+        presentation = ppt_mcp_server.presentations["test_party_layout_without_bars"]
+        self.assert_no_edge_bars(presentation.slides[0])
 
 
 if __name__ == "__main__":
