@@ -136,6 +136,23 @@ def register_workflow_tools(
                     "success": (80, 150, 120),
                 },
             },
+            "party_red": {
+                "name": "党建红金主题",
+                "description": "Party-building work report theme inspired by templates/P63483党建工作总结汇报PPT模板.pptx, using formal red and gold accents.",
+                "font_name": "Microsoft YaHei",
+                "colors": {
+                    "background": (255, 248, 239),
+                    "surface": (255, 255, 255),
+                    "primary": (192, 0, 0),
+                    "secondary": (105, 32, 28),
+                    "accent": (209, 0, 0),
+                    "muted": (130, 82, 68),
+                    "line": (236, 202, 170),
+                    "light": (255, 239, 214),
+                    "danger": (174, 0, 0),
+                    "success": (188, 131, 40),
+                },
+            },
         }
 
     def get_builtin_layouts() -> List[Dict[str, Any]]:
@@ -464,6 +481,22 @@ def register_workflow_tools(
                     "points_per_item": 2,
                     "line_chars": 32,
                 },
+            },
+            {
+                "layout_id": "party_work_summary",
+                "name": "党建工作总结页",
+                "description": "Party-building work summary layout with red header, statement band, and three to four work focus blocks.",
+                "use_when": "Use for party-building annual summaries, chapter content pages, rectification progress, and key work reports.",
+                "required_fields": ["title"],
+                "optional_fields": ["statement", "items", "sections", "content", "tag"],
+                "supported_fields": ["type", "title", "statement", "items", "sections", "content", "tag", "source_note"],
+                "capacity_limits": {
+                    "items": 4,
+                    "points_per_item": 3,
+                    "statement_chars": 90,
+                    "line_chars": 30,
+                },
+                "auto_infer_from": ["items", "sections"],
             },
         ]
 
@@ -1099,6 +1132,8 @@ def register_workflow_tools(
                 "academic_default_split": "expert_split",
                 "academic_default_path": "expert_path",
                 "academic_default_scope": "expert_scope",
+                "party_summary": "party_work_summary",
+                "party_work": "party_work_summary",
             }
             return aliases.get(explicit, explicit)
         if slide_spec.get("questions") or slide_spec.get("research_questions"):
@@ -1998,6 +2033,59 @@ def register_workflow_tools(
             add_text(slide, 4.55, top + 0.15, 6.9, 0.42, "；".join(item["points"][:2]), theme, 12, "secondary",
                      density=density, overflow=overflow, min_font_size=12, warnings=warnings, context="expert scope detail")
 
+    def render_party_work_summary_slide(
+        presentation,
+        slide_spec: Dict[str, Any],
+        theme: Dict[str, Any],
+        density: str,
+        overflow: str,
+        warnings: List[str],
+    ) -> None:
+        slide = make_blank_slide(presentation)
+        add_rect(slide, 0, 0, 13.333, 7.5, theme_color(theme, "background"))
+        add_rect(slide, 0, 0, 13.333, 0.58, theme_color(theme, "primary"))
+        add_rect(slide, 0, 7.1, 13.333, 0.4, theme_color(theme, "primary"))
+        add_rect(slide, 0.65, 0.95, 1.25, 0.08, theme_color(theme, "success"))
+        add_text(slide, 0.72, 0.23, 1.9, 0.22, slide_spec.get("tag") or "党建工作",
+                 theme, 9, "light", True, density=density, overflow=overflow, warnings=warnings)
+        title = slide_spec.get("title") or "党建工作总结"
+        add_text(slide, 0.72, 1.18, 8.2, 0.55, title, theme, fit_text_size(title, 24, 17, 24),
+                 "primary", True, density=density, overflow=overflow, warnings=warnings, context="party summary title")
+        add_rect(slide, 10.5, 0.82, 1.35, 1.35, theme_color(theme, "primary"), radius=True)
+        add_text(slide, 10.78, 1.17, 0.82, 0.28, "党", theme, 22, "light", True, "center",
+                 density=density, overflow=overflow, warnings=warnings, context="party emblem text")
+
+        statement = slide_spec.get("statement") or slide_spec.get("content") or ""
+        if statement:
+            add_rect(slide, 0.72, 1.9, 11.85, 0.78, theme_color(theme, "light"),
+                     theme_color(theme, "line"), True)
+            add_rect(slide, 0.72, 1.9, 0.1, 0.78, theme_color(theme, "success"))
+            add_text(slide, 0.98, 2.1, 11.1, 0.3, statement, theme, 13, "secondary", True,
+                     density=density, overflow=overflow, min_font_size=11, warnings=warnings, context="party statement")
+
+        sections = trim_items(normalized_sections(
+            {"items": slide_spec.get("items") or slide_spec.get("sections") or []}), 4, warnings, "party work summary items")
+        if not sections:
+            sections = [{"title": "重点工作", "points": safe_lines(slide_spec.get("text"), 3), "raw": {}}]
+
+        positions = [(0.82, 3.15), (3.98, 3.15), (7.14, 3.15), (10.3, 3.15)]
+        card_width = 2.55 if len(sections) >= 4 else 3.45
+        start_left = 0.82 if len(sections) >= 4 else 1.0
+        gap = 3.16 if len(sections) >= 4 else 4.0
+        for index, section in enumerate(sections):
+            left = positions[index][0] if len(sections) >= 4 else start_left + index * gap
+            top = positions[index][1]
+            add_rect(slide, left, top, card_width, 2.68, theme_color(theme, "surface"),
+                     theme_color(theme, "line"), True)
+            add_rect(slide, left, top, card_width, 0.48, theme_color(
+                theme, "primary" if index % 2 == 0 else "accent"))
+            add_text(slide, left + 0.16, top + 0.13, card_width - 0.32, 0.18, section["title"], theme, 11,
+                     "light", True, "center", density=density, overflow=overflow, min_font_size=9, warnings=warnings, context="party card title")
+            add_text(slide, left + 0.22, top + 0.72, card_width - 0.42, 1.42,
+                     "\n".join([f"- {line}" for line in section["points"][:3]]), theme, 10, "secondary",
+                     density=density, overflow=overflow, min_font_size=9, warnings=warnings, context="party card body")
+            add_rect(slide, left + 0.22, top + 2.27, 0.5, 0.06, theme_color(theme, "success"))
+
     def render_generated_slide(
         presentation,
         slide_spec: Dict[str, Any],
@@ -2024,6 +2112,9 @@ def register_workflow_tools(
                 presentation, slide_spec, theme, density, overflow, warnings)
         elif slide_type == "expert_scope":
             render_expert_scope_slide(
+                presentation, slide_spec, theme, density, overflow, warnings)
+        elif slide_type == "party_work_summary":
+            render_party_work_summary_slide(
                 presentation, slide_spec, theme, density, overflow, warnings)
         elif slide_type in {"comparison"}:
             render_two_column_slide(
