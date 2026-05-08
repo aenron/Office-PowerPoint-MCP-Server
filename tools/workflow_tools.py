@@ -483,6 +483,20 @@ def register_workflow_tools(
                 },
             },
             {
+                "layout_id": "expert_text_panel",
+                "name": "智算正文解析页",
+                "description": "Left-aligned title with a left insight card and right-side body text panel for method explanation pages.",
+                "use_when": "Use for module analysis, method explanation, mechanism interpretation, and long-form technical content.",
+                "required_fields": ["title"],
+                "optional_fields": ["statement", "panel_title", "panel_points", "body_title", "body_paragraphs", "items", "sections", "content"],
+                "supported_fields": ["type", "title", "statement", "panel_title", "panel_points", "body_title", "body_paragraphs", "items", "sections", "content", "source_note"],
+                "capacity_limits": {
+                    "panel_points": 4,
+                    "body_paragraphs": 4,
+                    "paragraph_chars": 120,
+                },
+            },
+            {
                 "layout_id": "party_work_summary",
                 "name": "党建工作总结页",
                 "description": "Party-building work summary layout with red header, statement band, and three to four work focus blocks.",
@@ -1890,9 +1904,9 @@ def register_workflow_tools(
         if kicker:
             add_text(slide, 0.72, 0.34, 3.0, 0.22, kicker,
                      theme, 8, "accent", True, density=density, overflow=overflow, warnings=warnings)
-        add_text(slide, 2.2, 0.48, 8.9, 0.55, title, theme, fit_text_size(
-            title, 22, 16, 26), "primary", True, "center", density=density, overflow=overflow, warnings=warnings)
-        add_rect(slide, 5.88, 1.18, 1.55, 0.04, theme_color(theme, "accent"))
+        add_text(slide, 0.72, 0.48, 8.9, 0.55, title, theme, fit_text_size(
+            title, 22, 16, 26), "primary", True, density=density, overflow=overflow, warnings=warnings)
+        add_rect(slide, 0.72, 1.18, 1.55, 0.04, theme_color(theme, "accent"))
 
     def render_expert_section_slide(
         presentation,
@@ -1930,22 +1944,22 @@ def register_workflow_tools(
                           theme, density=density, overflow=overflow, warnings=warnings)
         statement = slide_spec.get("statement") or slide_spec.get("content") or ""
         if statement:
-            add_text(slide, 1.1, 1.5, 11.1, 0.55, statement, theme, 16, "primary", True,
-                     alignment="center", density=density, overflow=overflow, warnings=warnings, context="expert content statement")
+            add_text(slide, 0.72, 1.5, 11.1, 0.85, statement, theme, 16, "primary", True,
+                     density=density, overflow=overflow, warnings=warnings, context="expert content statement")
         sections = trim_items(normalized_sections(
             {"items": slide_spec.get("items") or slide_spec.get("sections") or []}), 4, warnings, "expert content blocks")
         if not sections and not statement:
             sections = [{"title": "核心内容", "points": safe_lines(slide_spec.get("text"), 4), "raw": {}}]
-        positions = [(1.0, 2.35), (7.05, 2.35), (1.0, 4.55), (7.05, 4.55)]
+        positions = [(1.0, 2.55), (7.05, 2.55), (1.0, 4.9), (7.05, 4.9)]
         for index, section in enumerate(sections):
             left, top = positions[index]
-            add_rect(slide, left, top, 5.3, 1.5, theme_color(theme, "surface"),
+            add_rect(slide, left, top, 5.3, 2.0, theme_color(theme, "surface"),
                      theme_color(theme, "line"), True)
-            add_rect(slide, left, top, 0.08, 1.5, theme_color(
+            add_rect(slide, left, top, 0.08, 2.0, theme_color(
                 theme, "accent" if index % 2 == 0 else "primary"))
             add_text(slide, left + 0.22, top + 0.18, 4.8, 0.3, section["title"], theme, 13, "primary",
                      True, density=density, overflow=overflow, warnings=warnings, context="expert content block title")
-            add_text(slide, left + 0.22, top + 0.62, 4.85, 0.7, "\n".join([f"- {line}" for line in section["points"][:3]]),
+            add_text(slide, left + 0.22, top + 0.62, 4.85, 1.15, "\n".join([f"- {line}" for line in section["points"][:4]]),
                      theme, 11, "secondary", density=density, overflow=overflow, min_font_size=11, warnings=warnings, context="expert content block body")
 
     def render_expert_split_slide(
@@ -2027,6 +2041,67 @@ def register_workflow_tools(
             add_text(slide, 4.55, top + 0.15, 6.9, 0.42, "；".join(item["points"][:2]), theme, 12, "secondary",
                      density=density, overflow=overflow, min_font_size=12, warnings=warnings, context="expert scope detail")
 
+    def render_expert_text_panel_slide(
+        presentation,
+        slide_spec: Dict[str, Any],
+        theme: Dict[str, Any],
+        density: str,
+        overflow: str,
+        warnings: List[str],
+    ) -> None:
+        slide = make_blank_slide(presentation)
+        add_expert_header(slide, slide_spec.get("title") or "正文解析页",
+                          theme, density=density, overflow=overflow, warnings=warnings)
+
+        statement = slide_spec.get("statement") or slide_spec.get("content") or ""
+        if statement:
+            add_text(slide, 0.72, 1.5, 11.1, 0.78, statement, theme, 14, "primary", True,
+                     density=density, overflow=overflow, warnings=warnings, context="expert text panel statement")
+
+        panel_title = slide_spec.get("panel_title") or "核心观点"
+        panel_points = safe_lines(
+            slide_spec.get("panel_points")
+            or slide_spec.get("items")
+            or slide_spec.get("sections"),
+            8,
+        )
+        body_title = slide_spec.get("body_title") or ""
+        body_paragraphs = slide_spec.get("body_paragraphs") or []
+        if not body_paragraphs:
+            body_paragraphs = []
+            for section in normalized_sections({"items": slide_spec.get("sections") or slide_spec.get("items") or []}):
+                if section["title"] == panel_title and panel_points:
+                    continue
+                segment = "；".join([section["title"]] + section["points"][:2]).strip("；")
+                if segment:
+                    body_paragraphs.append(segment)
+            if not body_paragraphs and statement:
+                body_paragraphs = [statement]
+        body_paragraphs = trim_items(
+            [str(item) for item in body_paragraphs if str(item).strip()],
+            4,
+            warnings,
+            "expert text panel paragraphs",
+        )
+
+        add_rect(slide, 0.92, 2.45, 4.35, 3.4, theme_color(
+            theme, "surface"), theme_color(theme, "line"), True)
+        add_rect(slide, 0.92, 2.45, 0.1, 3.4, theme_color(theme, "accent"))
+        add_text(slide, 1.2, 2.72, 3.65, 0.35, panel_title, theme, 15, "primary", True,
+                 density=density, overflow=overflow, warnings=warnings, context="expert text panel title")
+        add_text(slide, 1.2, 3.22, 3.7, 2.15, "\n".join([f"- {line}" for line in panel_points[:4]]), theme, 12, "secondary",
+                 density=density, overflow=overflow, min_font_size=11, warnings=warnings, context="expert text panel points")
+
+        add_rect(slide, 5.7, 2.45, 6.25, 3.4, theme_color(
+            theme, "surface"), theme_color(theme, "line"), True)
+        if body_title:
+            add_text(slide, 6.0, 2.72, 5.55, 0.3, body_title, theme, 14, "primary", True,
+                     density=density, overflow=overflow, warnings=warnings, context="expert body title")
+        body_top = 3.18 if body_title else 2.82
+        paragraph_text = "\n\n".join(body_paragraphs)
+        add_text(slide, 6.0, body_top, 5.55, 2.4, paragraph_text, theme, 11, "secondary",
+                 density=density, overflow=overflow, min_font_size=10, warnings=warnings, context="expert body paragraphs")
+
     def render_party_work_summary_slide(
         presentation,
         slide_spec: Dict[str, Any],
@@ -2104,6 +2179,9 @@ def register_workflow_tools(
                 presentation, slide_spec, theme, density, overflow, warnings)
         elif slide_type == "expert_scope":
             render_expert_scope_slide(
+                presentation, slide_spec, theme, density, overflow, warnings)
+        elif slide_type == "expert_text_panel":
+            render_expert_text_panel_slide(
                 presentation, slide_spec, theme, density, overflow, warnings)
         elif slide_type == "party_work_summary":
             render_party_work_summary_slide(
