@@ -25,7 +25,7 @@ services:
       - ./ppt:/app/ppt
       - ./output:/app/output
       - ./public/downloads:/app/public/downloads
-      - ./templates/profiles:/app/templates/profiles
+      - ./templates:/app/templates
     restart: unless-stopped
     healthcheck:
       test:
