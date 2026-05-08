@@ -713,8 +713,6 @@ def register_workflow_tools(
 
     def add_theme_background(slide, theme: Dict[str, Any]) -> None:
         add_rect(slide, 0, 0, 13.333, 7.5, theme_color(theme, "background"))
-        add_rect(slide, 0, 0, 0.18, 7.5, theme_color(theme, "accent"))
-        add_rect(slide, 0.18, 0, 13.153, 0.08, theme_color(theme, "primary"))
 
     def add_slide_header(slide, title: str, theme: Dict[str, Any], kicker: str = "") -> None:
         add_theme_background(slide, theme)

@@ -46,5 +46,41 @@ class PartyThemeLayoutTests(unittest.TestCase):
         self.assertEqual(result["slide_count"], 1)
 
 
+class ThemeBackgroundTests(unittest.TestCase):
+    def test_generated_theme_background_has_no_edge_bars(self):
+        call_tool(
+            "generate_presentation",
+            presentation_id="test_theme_background_without_bars",
+            title="主题背景测试",
+            theme="academic_burgundy",
+            auto_cover=False,
+            show_footer=False,
+            show_page_number=False,
+            slides=[
+                {
+                    "type": "research_questions",
+                    "title": "研究问题",
+                    "questions": ["问题一", "问题二"],
+                }
+            ],
+        )
+
+        presentation = ppt_mcp_server.presentations["test_theme_background_without_bars"]
+        slide = presentation.slides[0]
+        edge_bars = [
+            shape for shape in slide.shapes
+            if (
+                abs(shape.left.inches - 0) < 0.01
+                and abs(shape.top.inches - 0) < 0.01
+                and (
+                    (shape.width.inches < 0.3 and shape.height.inches > 7.0)
+                    or (shape.width.inches > 12.5 and shape.height.inches < 0.2)
+                )
+            )
+        ]
+
+        self.assertEqual(edge_bars, [])
+
+
 if __name__ == "__main__":
     unittest.main()
