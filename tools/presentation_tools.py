@@ -140,6 +140,7 @@ def register_presentation_tools(app: FastMCP, presentations: Dict, get_current_p
     @app.custom_route("/downloads/{filename}", methods=["GET"])
     async def download_presentation(request: Request):
         filename = os.path.basename(request.path_params["filename"])
+        ppt_utils.cleanup_stale_generated_files(download_dir)
         file_path = os.path.join(download_dir, filename)
 
         if not os.path.exists(file_path):
@@ -258,6 +259,7 @@ def register_presentation_tools(app: FastMCP, presentations: Dict, get_current_p
         saved_path = os.path.join(download_dir, file_name)
 
         try:
+            cleanup = ppt_utils.cleanup_stale_generated_files(download_dir)
             saved_path = ppt_utils.save_presentation(pres, saved_path)
             port = getattr(app.settings, "port", 8000)
             download_base_url = (
@@ -265,7 +267,8 @@ def register_presentation_tools(app: FastMCP, presentations: Dict, get_current_p
             return {
                 "message": f"Presentation saved to {saved_path}",
                 "file_path": saved_path,
-                "download_url": f"{download_base_url}/downloads/{file_name}"
+                "download_url": f"{download_base_url}/downloads/{file_name}",
+                "cleanup": cleanup,
             }
         except Exception as e:
             return {

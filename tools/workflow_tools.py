@@ -31,6 +31,7 @@ def register_workflow_tools(
     """Register simplified, template-aware workflow tools."""
     project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     download_dir = os.path.join(project_root, "ppt")
+    default_export_dir = download_dir
     download_url = os.environ.get("DOWNLOAD_URL")
     emu_per_inch = 914400
     profile_dir = os.path.join(project_root, "templates", "profiles")
@@ -3410,6 +3411,7 @@ def register_workflow_tools(
     async def download_presentation(request: Request):
         """Serve exported presentations for simplified workflow mode."""
         filename = os.path.basename(request.path_params["filename"])
+        ppt_utils.cleanup_stale_generated_files(download_dir)
         file_path = os.path.join(download_dir, filename)
 
         if not os.path.exists(file_path):
@@ -3418,6 +3420,12 @@ def register_workflow_tools(
                     continue
                 exported_path = project.get("last_export_path", "")
                 if exported_path and os.path.basename(exported_path) == filename and os.path.exists(exported_path):
+                    if not ppt_utils.is_file_modified_on_date(exported_path):
+                        try:
+                            os.remove(exported_path)
+                        except OSError:
+                            pass
+                        continue
                     file_path = exported_path
                     break
             else:
@@ -4294,10 +4302,7 @@ def register_workflow_tools(
 
         template_export = template_export or {}
         project = projects.get(presentation_id, {})
-        export_directory = output_directory or os.path.join(
-            os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-            "ppt",
-        )
+        export_directory = output_directory or default_export_dir
         os.makedirs(export_directory, exist_ok=True)
 
         effective_file_name = file_name or project.get(
@@ -4307,6 +4312,17 @@ def register_workflow_tools(
 
         file_path = os.path.join(export_directory, effective_file_name)
         try:
+            cleanup = (
+                ppt_utils.cleanup_stale_generated_files(default_export_dir)
+                if os.path.abspath(export_directory) == os.path.abspath(default_export_dir)
+                else {
+                    "directory": os.path.abspath(export_directory),
+                    "retention_date": "",
+                    "deleted_files": [],
+                    "failed_files": [],
+                    "skipped": "custom output_directory is not auto-cleaned",
+                }
+            )
             ppt_utils.save_presentation(
                 presentations[presentation_id], file_path)
         except PermissionError:
@@ -4323,6 +4339,7 @@ def register_workflow_tools(
             "presentation_id": presentation_id,
             "file_path": file_path,
             "download_url": f"{(download_url or f'http://localhost:{port}').rstrip('/')}/downloads/{effective_file_name}",
+            "cleanup": cleanup,
             "preserve_theme_assets": template_export.get("preserve_theme_assets", True),
         }
 

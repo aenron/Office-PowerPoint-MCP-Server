@@ -3,7 +3,8 @@ Presentation management utilities for PowerPoint MCP Server.
 Functions for creating, opening, saving, and managing presentations.
 """
 from pptx import Presentation
-from typing import Dict, List
+from datetime import date, datetime
+from typing import Any, Dict, List, Optional, Tuple
 import os
 
 
@@ -72,6 +73,74 @@ def save_presentation(presentation: Presentation, file_path: str) -> str:
     """
     presentation.save(file_path)
     return file_path
+
+
+def cleanup_stale_generated_files(
+    directory: str,
+    keep_date: Optional[date] = None,
+    suffixes: Tuple[str, ...] = (".pptx",),
+) -> Dict[str, Any]:
+    """
+    Delete generated presentation files whose modified date is not keep_date.
+
+    Args:
+        directory: Directory containing generated files.
+        keep_date: Local date to retain. Defaults to today.
+        suffixes: File suffixes considered generated presentation files.
+
+    Returns:
+        Cleanup summary. Delete failures are reported but not raised.
+    """
+    retention_date = keep_date or date.today()
+    summary: Dict[str, Any] = {
+        "directory": os.path.abspath(directory) if directory else "",
+        "retention_date": retention_date.isoformat(),
+        "deleted_files": [],
+        "failed_files": [],
+    }
+    if not directory or not os.path.isdir(directory):
+        return summary
+
+    normalized_suffixes = tuple(suffix.lower() for suffix in suffixes)
+    for entry in os.scandir(directory):
+        if not entry.is_file():
+            continue
+        if normalized_suffixes and not entry.name.lower().endswith(normalized_suffixes):
+            continue
+
+        try:
+            modified_date = datetime.fromtimestamp(entry.stat().st_mtime).date()
+        except OSError as exc:
+            summary["failed_files"].append({
+                "file_path": entry.path,
+                "error": str(exc),
+            })
+            continue
+
+        if modified_date == retention_date:
+            continue
+
+        try:
+            os.remove(entry.path)
+            summary["deleted_files"].append(entry.path)
+        except OSError as exc:
+            summary["failed_files"].append({
+                "file_path": entry.path,
+                "error": str(exc),
+            })
+
+    return summary
+
+
+def is_file_modified_on_date(file_path: str, keep_date: Optional[date] = None) -> bool:
+    """Return whether file_path exists and was modified on keep_date."""
+    if not file_path or not os.path.isfile(file_path):
+        return False
+    retention_date = keep_date or date.today()
+    try:
+        return datetime.fromtimestamp(os.path.getmtime(file_path)).date() == retention_date
+    except OSError:
+        return False
 
 
 def get_template_info(template_path: str) -> Dict:

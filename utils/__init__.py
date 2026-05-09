@@ -18,6 +18,8 @@ __all__ = [
     "create_presentation",
     "open_presentation", 
     "save_presentation",
+    "cleanup_stale_generated_files",
+    "is_file_modified_on_date",
     "create_presentation_from_template",
     "get_presentation_info",
     "get_template_info",
