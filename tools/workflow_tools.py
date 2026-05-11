@@ -103,6 +103,23 @@ def register_workflow_tools(
                     "success": (68, 132, 94),
                 },
             },
+            "tech_dark": {
+                "name": "深色科技主题",
+                "description": "Dark technology theme for AI, cybersecurity, data platforms, and technical demos.",
+                "font_name": "Microsoft YaHei",
+                "colors": {
+                    "background": (15, 23, 42),
+                    "surface": (30, 41, 59),
+                    "primary": (226, 232, 240),
+                    "secondary": (203, 213, 225),
+                    "accent": (56, 189, 248),
+                    "muted": (148, 163, 184),
+                    "line": (51, 65, 85),
+                    "light": (30, 41, 59),
+                    "danger": (248, 113, 113),
+                    "success": (52, 211, 153),
+                },
+            },
             "academic_burgundy": {
                 "name": "Academic Burgundy",
                 "description": "Restrained academic style for social-science talks, thesis defenses, and research seminars.",
@@ -121,8 +138,8 @@ def register_workflow_tools(
                 },
             },
             "expert_forum_blue": {
-                "name": "Expert Forum Blue",
-                "description": "Academic technology theme derived from templates/智算专家会.pptx with deep blue accents.",
+                "name": "专家论坛蓝主题",
+                "description": "Academic technology theme for expert forums and technical reports, using deep blue accents.",
                 "font_name": "Microsoft YaHei",
                 "colors": {
                     "background": (245, 247, 250),
@@ -188,6 +205,36 @@ def register_workflow_tools(
                 "auto_infer_from": ["items", "sections"],
             },
             {
+                "layout_id": "agenda",
+                "name": "Agenda",
+                "description": "Agenda or outline slide with ordered topics and optional brief descriptions.",
+                "use_when": "Use for table of contents, meeting agenda, presentation outline, or chapter preview.",
+                "required_fields": ["title"],
+                "optional_fields": ["subtitle", "statement", "agenda", "items", "sections"],
+                "supported_fields": ["type", "title", "subtitle", "statement", "agenda", "items", "sections", "source_note"],
+                "capacity_limits": {
+                    "items": 7,
+                    "points_per_item": 2,
+                    "line_chars": 34,
+                },
+                "auto_infer_from": ["agenda"],
+            },
+            {
+                "layout_id": "section_agenda",
+                "name": "Section Agenda",
+                "description": "Chapter divider with a focused agenda for the current section.",
+                "use_when": "Use for chapter openings that need 3-4 section focus items.",
+                "required_fields": ["title"],
+                "optional_fields": ["subtitle", "section_no", "agenda", "items", "sections"],
+                "supported_fields": ["type", "title", "subtitle", "section_no", "agenda", "items", "sections", "source_note"],
+                "capacity_limits": {
+                    "items": 4,
+                    "points_per_item": 2,
+                    "line_chars": 32,
+                },
+                "auto_infer_from": ["section_no", "agenda"],
+            },
+            {
                 "layout_id": "cards",
                 "name": "Cards",
                 "description": "Card grid for multiple concepts, modules, capabilities, or arguments.",
@@ -218,6 +265,52 @@ def register_workflow_tools(
                 "auto_infer_from": ["left", "right", "comparisons"],
             },
             {
+                "layout_id": "problem_solution",
+                "name": "Problem Solution",
+                "description": "Structured problem, cause, solution, and optional result page.",
+                "use_when": "Use for issue diagnosis, policy response, project proposal, improvement plan, and problem-solution pages.",
+                "required_fields": ["title"],
+                "optional_fields": ["statement", "problem", "causes", "solution", "actions", "result", "problem_title", "causes_title", "solution_title", "result_title"],
+                "supported_fields": ["type", "title", "statement", "problem", "causes", "solution", "actions", "result", "problem_title", "causes_title", "solution_title", "result_title", "source_note"],
+                "capacity_limits": {
+                    "problem_lines": 4,
+                    "causes": 4,
+                    "actions": 4,
+                    "result_chars": 90,
+                    "line_chars": 34,
+                },
+                "auto_infer_from": ["problem", "solution", "causes"],
+            },
+            {
+                "layout_id": "before_after",
+                "name": "Before After",
+                "description": "Before-and-after comparison with optional change summary and metrics.",
+                "use_when": "Use for transformation outcomes, optimization comparison, and status changes.",
+                "required_fields": ["title"],
+                "optional_fields": ["statement", "before", "after", "before_title", "after_title", "metrics", "result"],
+                "supported_fields": ["type", "title", "statement", "before", "after", "before_title", "after_title", "metrics", "result", "source_note"],
+                "capacity_limits": {
+                    "items_per_side": 5,
+                    "metrics": 3,
+                    "line_chars": 34,
+                },
+                "auto_infer_from": ["before", "after"],
+            },
+            {
+                "layout_id": "swot",
+                "name": "SWOT",
+                "description": "Four-quadrant SWOT analysis page.",
+                "use_when": "Use for strategy, market analysis, capability assessment, and situation diagnosis.",
+                "required_fields": ["title"],
+                "optional_fields": ["strengths", "weaknesses", "opportunities", "threats"],
+                "supported_fields": ["type", "title", "strengths", "weaknesses", "opportunities", "threats", "source_note"],
+                "capacity_limits": {
+                    "items_per_quadrant": 4,
+                    "line_chars": 28,
+                },
+                "auto_infer_from": ["strengths", "weaknesses", "opportunities", "threats"],
+            },
+            {
                 "layout_id": "process",
                 "name": "Process",
                 "description": "Horizontal process with up to four steps.",
@@ -245,6 +338,21 @@ def register_workflow_tools(
                     "line_chars": 28,
                 },
                 "auto_infer_from": ["steps"],
+            },
+            {
+                "layout_id": "roadmap",
+                "name": "Roadmap",
+                "description": "Longer-term roadmap with phases, goals, and milestones.",
+                "use_when": "Use for quarterly plans, annual roadmaps, product plans, and staged development.",
+                "required_fields": ["title", "roadmap"],
+                "optional_fields": ["steps", "milestones", "items"],
+                "supported_fields": ["type", "title", "roadmap", "steps", "milestones", "items", "source_note"],
+                "capacity_limits": {
+                    "phases": 6,
+                    "points_per_phase": 3,
+                    "line_chars": 30,
+                },
+                "auto_infer_from": ["roadmap"],
             },
             {
                 "layout_id": "metrics",
@@ -277,6 +385,21 @@ def register_workflow_tools(
                 "auto_infer_from": ["layers", "relations"],
             },
             {
+                "layout_id": "team_roles",
+                "name": "Team Roles",
+                "description": "Team, organization, and responsibility assignment page.",
+                "use_when": "Use for organization structure, project roles, task ownership, and governance teams.",
+                "required_fields": ["title"],
+                "optional_fields": ["roles", "team", "items", "sections"],
+                "supported_fields": ["type", "title", "roles", "team", "items", "sections", "source_note"],
+                "capacity_limits": {
+                    "roles": 6,
+                    "points_per_role": 3,
+                    "line_chars": 30,
+                },
+                "auto_infer_from": ["roles", "team"],
+            },
+            {
                 "layout_id": "table",
                 "name": "Table",
                 "description": "Structured table with headers and rows.",
@@ -290,6 +413,52 @@ def register_workflow_tools(
                     "cell_chars": 28,
                 },
                 "auto_infer_from": ["table"],
+            },
+            {
+                "layout_id": "risk_matrix",
+                "name": "Risk Matrix",
+                "description": "Risk matrix or risk register page with level, impact, probability, and mitigation.",
+                "use_when": "Use for risk assessment, issue tracking, compliance review, and mitigation planning.",
+                "required_fields": ["title"],
+                "optional_fields": ["risks", "risk_matrix", "items", "headers"],
+                "supported_fields": ["type", "title", "risks", "risk_matrix", "items", "headers", "source_note"],
+                "capacity_limits": {
+                    "risks": 6,
+                    "columns": 4,
+                    "cell_chars": 28,
+                },
+                "auto_infer_from": ["risks", "risk_matrix"],
+            },
+            {
+                "layout_id": "case_study",
+                "name": "Case Study",
+                "description": "Case page covering background, practice, results, and optional insights.",
+                "use_when": "Use for case analysis, pilot project review, benchmark example, and scenario explanation.",
+                "required_fields": ["title"],
+                "optional_fields": ["case_name", "statement", "case_background", "case_actions", "case_results", "case_insights", "background_title", "actions_title", "results_title", "insights_title", "image_path", "image_caption"],
+                "supported_fields": ["type", "title", "case_name", "statement", "case_background", "case_actions", "case_results", "case_insights", "background_title", "actions_title", "results_title", "insights_title", "image_path", "image_caption", "source_note"],
+                "capacity_limits": {
+                    "background_lines": 3,
+                    "actions": 4,
+                    "results": 4,
+                    "insights": 3,
+                    "line_chars": 34,
+                },
+                "auto_infer_from": ["case_background", "case_actions", "case_results"],
+            },
+            {
+                "layout_id": "image_showcase",
+                "name": "Image Showcase",
+                "description": "Large image display page with title, caption, and optional short notes.",
+                "use_when": "Use for product screenshots, field photos, diagrams, maps, and visual evidence.",
+                "required_fields": ["title", "image_path"],
+                "optional_fields": ["image_caption", "statement", "notes", "items"],
+                "supported_fields": ["type", "title", "image_path", "image_caption", "statement", "notes", "items", "source_note"],
+                "capacity_limits": {
+                    "notes": 3,
+                    "caption_chars": 80,
+                },
+                "auto_infer_from": ["image_path"],
             },
             {
                 "layout_id": "quote",
@@ -415,8 +584,8 @@ def register_workflow_tools(
             },
             {
                 "layout_id": "expert_section",
-                "name": "智算章节页",
-                "description": "Section divider inspired by templates/智算专家会.pptx, with centered title and subtitle.",
+                "name": "专家章节页",
+                "description": "Section divider for expert forum and technical report decks, with centered title and subtitle.",
                 "use_when": "Use for chapter openings and topic transitions.",
                 "required_fields": ["title"],
                 "optional_fields": ["subtitle", "content", "tag"],
@@ -429,7 +598,7 @@ def register_workflow_tools(
             },
             {
                 "layout_id": "expert_card_overview",
-                "name": "智算标题内容页",
+                "name": "专家标题内容页",
                 "description": "Top-centered title layout with open content blocks, matching the expert forum deck rhythm.",
                 "use_when": "Use for overview, explanation, and normal content pages.",
                 "required_fields": ["title"],
@@ -443,7 +612,7 @@ def register_workflow_tools(
             },
             {
                 "layout_id": "expert_image_text",
-                "name": "智算左右图文页",
+                "name": "专家左右图文页",
                 "description": "Large left visual area plus right explanatory stack, based on the case-study pages in the template.",
                 "use_when": "Use for case pages, scenario explanation, and image-plus-text evidence.",
                 "required_fields": ["title"],
@@ -457,7 +626,7 @@ def register_workflow_tools(
             },
             {
                 "layout_id": "expert_process_path",
-                "name": "智算流程路径页",
+                "name": "专家流程路径页",
                 "description": "Six-step implementation path with a central numbered rail and side explanations.",
                 "use_when": "Use for scenario implementation paths, process methods, or staged logic.",
                 "required_fields": ["title", "steps"],
@@ -471,7 +640,7 @@ def register_workflow_tools(
             },
             {
                 "layout_id": "expert_scope_list",
-                "name": "智算范围清单页",
+                "name": "专家范围清单页",
                 "description": "Vertical scope list inspired by the security-scope slide in the template.",
                 "use_when": "Use for scope, safeguards, checklist, policy coverage, or risk categories.",
                 "required_fields": ["title", "items"],
@@ -485,7 +654,7 @@ def register_workflow_tools(
             },
             {
                 "layout_id": "expert_body_panel",
-                "name": "智算正文解析页",
+                "name": "专家正文解析页",
                 "description": "Left-aligned title with a left insight card and right-side body text panel for method explanation pages.",
                 "use_when": "Use for module analysis, method explanation, mechanism interpretation, and long-form technical content.",
                 "required_fields": ["title"],
@@ -519,6 +688,7 @@ def register_workflow_tools(
         themes = get_builtin_themes()
         theme_aliases = {
             "academic_default": "expert_forum_blue",
+            "government_blue": "business_blue",
         }
         resolved_theme_id = theme_aliases.get(theme_id, theme_id)
         effective_theme_id = resolved_theme_id if resolved_theme_id in themes else "business_blue"
@@ -1138,7 +1308,22 @@ def register_workflow_tools(
         if explicit:
             aliases = {
                 "two_column": "comparison",
-                "roadmap": "process",
+                "outline": "agenda",
+                "toc": "agenda",
+                "section_outline": "section_agenda",
+                "section_toc": "section_agenda",
+                "roadmap": "roadmap",
+                "issue_solution": "problem_solution",
+                "problem_solving": "problem_solution",
+                "beforeafter": "before_after",
+                "before_after_comparison": "before_after",
+                "risk": "risk_matrix",
+                "risk_register": "risk_matrix",
+                "team": "team_roles",
+                "roles": "team_roles",
+                "image": "image_showcase",
+                "showcase": "image_showcase",
+                "case": "case_study",
                 "end": "closing",
                 "bullet": "summary",
                 "literature": "literature_matrix",
@@ -1162,6 +1347,26 @@ def register_workflow_tools(
                 "party_work": "party_summary_panel",
             }
             return aliases.get(explicit, explicit)
+        if slide_spec.get("section_no") and (slide_spec.get("agenda") or slide_spec.get("items") or slide_spec.get("sections")):
+            return "section_agenda"
+        if slide_spec.get("agenda") or slide_spec.get("outline"):
+            return "agenda"
+        if slide_spec.get("problem") or slide_spec.get("solution") or slide_spec.get("causes"):
+            return "problem_solution"
+        if slide_spec.get("before") or slide_spec.get("after"):
+            return "before_after"
+        if slide_spec.get("strengths") or slide_spec.get("weaknesses") or slide_spec.get("opportunities") or slide_spec.get("threats"):
+            return "swot"
+        if slide_spec.get("roadmap") or slide_spec.get("milestones"):
+            return "roadmap"
+        if slide_spec.get("roles") or slide_spec.get("team"):
+            return "team_roles"
+        if slide_spec.get("risks") or slide_spec.get("risk_matrix"):
+            return "risk_matrix"
+        if slide_spec.get("case_background") or slide_spec.get("case_actions") or slide_spec.get("case_results"):
+            return "case_study"
+        if slide_spec.get("image_path") and not (slide_spec.get("items") or slide_spec.get("sections")):
+            return "image_showcase"
         if slide_spec.get("questions") or slide_spec.get("research_questions"):
             return "research_questions"
         if slide_spec.get("literature") or slide_spec.get("studies"):
@@ -1195,6 +1400,24 @@ def register_workflow_tools(
             if layout.get("layout_id") == layout_id:
                 return layout
         return {}
+
+    def visible_builtin_layouts() -> List[Dict[str, Any]]:
+        hidden_layout_ids = {
+            "architecture",
+            "team_roles",
+            "before_after",
+            "swot",
+            "expert_section",
+            "expert_card_overview",
+            "expert_image_text",
+            "expert_process_path",
+            "expert_scope_list",
+            "expert_body_panel",
+        }
+        return [
+            layout for layout in get_builtin_layouts()
+            if layout.get("layout_id") not in hidden_layout_ids
+        ]
 
     def collect_ignored_fields(slide_spec: Dict[str, Any], rendered_type: str, slide_index: int) -> List[Dict[str, Any]]:
         layout = layout_metadata(rendered_type)
@@ -1401,6 +1624,76 @@ def register_workflow_tools(
             add_card(slide, left, top + (0.25 if statement else 0), 5.65, 2.0 if statement else 2.12,
                      section["title"], section["points"], theme, density=density, overflow=overflow, warnings=warnings)
 
+    def render_agenda_slide(
+        presentation,
+        slide_spec: Dict[str, Any],
+        theme: Dict[str, Any],
+        density: str,
+        overflow: str,
+        warnings: List[str],
+    ) -> None:
+        slide = make_blank_slide(presentation)
+        add_slide_header(slide, slide_spec.get("title") or "目录",
+                         theme, slide_spec.get("kicker") or "AGENDA")
+        statement = slide_spec.get("statement") or slide_spec.get("subtitle") or ""
+        if statement:
+            add_text(slide, 0.82, 1.42, 11.6, 0.35, statement, theme, 12, "secondary",
+                     density=density, overflow=overflow, warnings=warnings, context="agenda statement")
+        agenda_source = slide_spec.get("agenda") or slide_spec.get("items") or slide_spec.get("sections") or []
+        items = trim_items(normalized_sections({"items": agenda_source}), 7, warnings, "agenda items")
+        top = 1.85 if statement else 1.62
+        gap = 0.68 if len(items) > 5 else 0.82
+        for index, item in enumerate(items):
+            y = top + index * gap
+            add_rect(slide, 0.9, y, 0.48, 0.48, theme_color(theme, "accent"), radius=True)
+            add_text(slide, 1.0, y + 0.13, 0.28, 0.18, f"{index + 1:02d}", theme, 8, "surface", True, "center",
+                     density=density, overflow=overflow)
+            title = item["title"] or (item["points"][0] if item["points"] else "")
+            detail_points = item["points"] if item["title"] else item["points"][1:]
+            add_text(slide, 1.62, y + 0.03, 3.8, 0.25, title, theme, 13, "primary", True,
+                     density=density, overflow=overflow, warnings=warnings, context="agenda item title")
+            detail = "；".join(detail_points[:2])
+            if detail:
+                add_text(slide, 5.45, y + 0.03, 6.35, 0.3, detail, theme, 11, "secondary",
+                         density=density, overflow=overflow, min_font_size=10, warnings=warnings, context="agenda item detail")
+            add_rect(slide, 1.6, y + 0.55, 10.45, 0.015, theme_color(theme, "line"))
+
+    def render_section_agenda_slide(
+        presentation,
+        slide_spec: Dict[str, Any],
+        theme: Dict[str, Any],
+        density: str,
+        overflow: str,
+        warnings: List[str],
+    ) -> None:
+        slide = make_blank_slide(presentation)
+        add_theme_background(slide, theme)
+        section_no = str(slide_spec.get("section_no") or "").strip()
+        if section_no:
+            add_text(slide, 0.78, 0.92, 1.25, 0.34, section_no, theme, 16, "accent", True,
+                     density=density, overflow=overflow, warnings=warnings, context="section agenda number")
+        title_left = 2.15 if section_no else 0.78
+        title = slide_spec.get("title") or ""
+        add_text(slide, title_left, 0.82, 8.9, 0.58, title, theme, fit_text_size(title, 24, 16, 24),
+                 "primary", True, density=density, overflow=overflow, warnings=warnings, context="section agenda title")
+        subtitle = slide_spec.get("subtitle") or slide_spec.get("content") or ""
+        if subtitle:
+            add_text(slide, title_left, 1.43, 9.2, 0.34, subtitle, theme, 12, "secondary",
+                     density=density, overflow=overflow, warnings=warnings, context="section agenda subtitle")
+        agenda_source = slide_spec.get("agenda") or slide_spec.get("items") or slide_spec.get("sections") or []
+        items = trim_items(normalized_sections({"items": agenda_source}), 4, warnings, "section agenda items")
+        for index, item in enumerate(items):
+            left = 0.9 + index * 3.05
+            top = 2.35
+            add_rect(slide, left, top, 2.55, 2.75, theme_color(theme, "surface"), theme_color(theme, "line"), True)
+            add_rect(slide, left, top, 2.55, 0.12, theme_color(theme, "accent" if index % 2 == 0 else "primary"))
+            add_text(slide, left + 0.22, top + 0.34, 0.5, 0.28, f"{index + 1:02d}", theme, 13, "accent", True,
+                     density=density, overflow=overflow)
+            add_text(slide, left + 0.22, top + 0.82, 2.05, 0.34, item["title"] or "", theme, 13, "primary", True,
+                     density=density, overflow=overflow, warnings=warnings, context="section agenda item title")
+            add_text(slide, left + 0.22, top + 1.28, 2.05, 1.0, "\n".join([f"- {line}" for line in item["points"][:2]]),
+                     theme, 10, "secondary", density=density, overflow=overflow, min_font_size=9, warnings=warnings, context="section agenda item body")
+
     def render_cards_slide(
         presentation,
         slide_spec: Dict[str, Any],
@@ -1467,6 +1760,95 @@ def register_workflow_tools(
         add_card(slide, 6.85, 1.75, 5.65, 4.85, right.get("title") or "", safe_lines(right.get(
             "points") or right.get("content"), 8), theme, "success", density, overflow, warnings)
 
+    def render_problem_solution_slide(
+        presentation,
+        slide_spec: Dict[str, Any],
+        theme: Dict[str, Any],
+        density: str,
+        overflow: str,
+        warnings: List[str],
+    ) -> None:
+        slide = make_blank_slide(presentation)
+        add_slide_header(slide, slide_spec.get("title") or "问题与方案",
+                         theme, slide_spec.get("kicker") or "SOLUTION")
+        statement = slide_spec.get("statement") or ""
+        if statement:
+            add_text(slide, 0.85, 1.4, 11.7, 0.34, statement, theme, 12, "secondary",
+                     density=density, overflow=overflow, warnings=warnings, context="problem solution statement")
+        top = 1.82 if statement else 1.62
+        problem_lines = safe_lines(slide_spec.get("problem"), 4)
+        causes = safe_lines(slide_spec.get("causes"), 4)
+        solution_lines = safe_lines(slide_spec.get("solution") or slide_spec.get("actions"), 4)
+        result_lines = safe_lines(slide_spec.get("result"), 3)
+
+        cards = [
+            (0.85, slide_spec.get("problem_title") or "问题", problem_lines, "danger"),
+            (4.75, slide_spec.get("causes_title") or "原因", causes, "accent"),
+            (8.65, slide_spec.get("solution_title") or "方案", solution_lines, "success"),
+        ]
+        for left, title, lines, role in cards:
+            add_card(slide, left, top, 3.45, 3.55, title if lines else "", lines, theme, role, density, overflow, warnings)
+        if result_lines:
+            add_rect(slide, 0.85, 5.75, 11.25, 0.65, theme_color(theme, "light"), theme_color(theme, "line"), True)
+            result_title = slide_spec.get("result_title") or "预期成效"
+            add_text(slide, 1.1, 5.93, 1.45, 0.24, result_title, theme, 11, "accent", True,
+                     density=density, overflow=overflow, warnings=warnings, context="problem solution result title")
+            add_text(slide, 2.62, 5.88, 9.1, 0.32, "；".join(result_lines), theme, 11, "secondary",
+                     density=density, overflow=overflow, min_font_size=10, warnings=warnings, context="problem solution result")
+
+    def render_before_after_slide(
+        presentation,
+        slide_spec: Dict[str, Any],
+        theme: Dict[str, Any],
+        density: str,
+        overflow: str,
+        warnings: List[str],
+    ) -> None:
+        slide = make_blank_slide(presentation)
+        add_slide_header(slide, slide_spec.get("title") or "前后对比",
+                         theme, slide_spec.get("kicker") or "BEFORE / AFTER")
+        statement = slide_spec.get("statement") or ""
+        if statement:
+            add_text(slide, 0.85, 1.42, 11.6, 0.32, statement, theme, 12, "secondary",
+                     density=density, overflow=overflow, warnings=warnings, context="before after statement")
+        top = 1.82 if statement else 1.68
+        before_lines = safe_lines(slide_spec.get("before"), 5)
+        after_lines = safe_lines(slide_spec.get("after"), 5)
+        add_card(slide, 0.85, top, 5.25, 3.75, slide_spec.get("before_title") or "", before_lines,
+                 theme, "danger", density, overflow, warnings)
+        add_card(slide, 7.05, top, 5.25, 3.75, slide_spec.get("after_title") or "", after_lines,
+                 theme, "success", density, overflow, warnings)
+        add_text(slide, 6.32, top + 1.45, 0.5, 0.4, ">", theme, 24, "accent", True, "center",
+                 density=density, overflow=overflow)
+        metrics = trim_items(slide_spec.get("metrics") or [], 3, warnings, "before after metrics")
+        result = safe_lines(slide_spec.get("result"), 2)
+        if metrics or result:
+            add_rect(slide, 0.85, 5.95, 11.45, 0.55, theme_color(theme, "light"), theme_color(theme, "line"), True)
+            metric_text = "；".join([str(item.get("label", item.get("title", ""))) + (f": {item.get('value')}" if isinstance(item, dict) and item.get("value") else "") if isinstance(item, dict) else str(item) for item in metrics])
+            summary = "；".join([item for item in [metric_text, "；".join(result)] if item])
+            add_text(slide, 1.1, 6.08, 10.8, 0.26, summary, theme, 11, "secondary",
+                     density=density, overflow=overflow, warnings=warnings, context="before after summary")
+
+    def render_swot_slide(
+        presentation,
+        slide_spec: Dict[str, Any],
+        theme: Dict[str, Any],
+        density: str,
+        overflow: str,
+        warnings: List[str],
+    ) -> None:
+        slide = make_blank_slide(presentation)
+        add_slide_header(slide, slide_spec.get("title") or "SWOT 分析",
+                         theme, slide_spec.get("kicker") or "SWOT")
+        quadrants = [
+            (0.85, 1.65, "优势", safe_lines(slide_spec.get("strengths"), 4), "success"),
+            (6.85, 1.65, "劣势", safe_lines(slide_spec.get("weaknesses"), 4), "danger"),
+            (0.85, 4.2, "机会", safe_lines(slide_spec.get("opportunities"), 4), "accent"),
+            (6.85, 4.2, "威胁", safe_lines(slide_spec.get("threats"), 4), "primary"),
+        ]
+        for left, top, title, lines, role in quadrants:
+            add_card(slide, left, top, 5.45, 2.0, title if lines else "", lines, theme, role, density, overflow, warnings)
+
     def render_process_slide(
         presentation,
         slide_spec: Dict[str, Any],
@@ -1525,6 +1907,35 @@ def register_workflow_tools(
                      "center", density=density, overflow=overflow, warnings=warnings, context="timeline title")
             add_text(slide, left - 0.75, 4.48, 2.0, 0.95, "\n".join(step["points"][:2]), theme, 11, "secondary",
                      alignment="center", density=density, overflow=overflow, min_font_size=11, warnings=warnings, context="timeline detail")
+
+    def render_roadmap_slide(
+        presentation,
+        slide_spec: Dict[str, Any],
+        theme: Dict[str, Any],
+        density: str,
+        overflow: str,
+        warnings: List[str],
+    ) -> None:
+        slide = make_blank_slide(presentation)
+        add_slide_header(slide, slide_spec.get("title") or "路线图",
+                         theme, slide_spec.get("kicker") or "ROADMAP")
+        roadmap_source = slide_spec.get("roadmap") or slide_spec.get("milestones") or slide_spec.get("steps") or slide_spec.get("items") or []
+        phases = trim_items(normalized_sections({"items": roadmap_source}), 6, warnings, "roadmap phases")
+        if not phases:
+            return
+        gap = 10.8 / max(len(phases), 1)
+        y = 2.55
+        add_rect(slide, 1.15, y + 0.32, 10.9, 0.05, theme_color(theme, "line"))
+        for index, phase in enumerate(phases):
+            left = 0.95 + index * gap
+            width = min(2.0, gap - 0.16)
+            add_rect(slide, left, y, 0.5, 0.5, theme_color(theme, "accent"), radius=True)
+            add_text(slide, left + 0.13, y + 0.14, 0.22, 0.18, str(index + 1), theme, 8, "surface", True, "center",
+                     density=density, overflow=overflow)
+            add_text(slide, left - 0.1, y + 0.78, width, 0.32, phase["title"], theme, 11, "primary", True,
+                     "center", density=density, overflow=overflow, warnings=warnings, context="roadmap phase title")
+            add_text(slide, left - 0.18, y + 1.28, width + 0.2, 1.25, "\n".join(phase["points"][:3]), theme, 10, "secondary",
+                     alignment="center", density=density, overflow=overflow, min_font_size=9, warnings=warnings, context="roadmap phase detail")
 
     def render_metrics_slide(
         presentation,
@@ -1586,6 +1997,31 @@ def register_workflow_tools(
                 add_text(slide, item_left + 0.08, top + 0.31, 1.18, 0.18, item, theme, 10, "surface", True, "center",
                          density=density, overflow=overflow, min_font_size=10, warnings=warnings, context="architecture item")
 
+    def render_team_roles_slide(
+        presentation,
+        slide_spec: Dict[str, Any],
+        theme: Dict[str, Any],
+        density: str,
+        overflow: str,
+        warnings: List[str],
+    ) -> None:
+        slide = make_blank_slide(presentation)
+        add_slide_header(slide, slide_spec.get("title") or "团队分工",
+                         theme, slide_spec.get("kicker") or "ROLES")
+        roles_source = slide_spec.get("roles") or slide_spec.get("team") or slide_spec.get("items") or slide_spec.get("sections") or []
+        roles = trim_items(normalized_sections({"items": roles_source}), 6, warnings, "team roles")
+        for index, role in enumerate(roles):
+            row, col = divmod(index, 3)
+            left, top = 0.85 + col * 4.1, 1.72 + row * 2.32
+            add_rect(slide, left, top, 3.55, 1.78, theme_color(theme, "surface"), theme_color(theme, "line"), True)
+            add_rect(slide, left + 0.22, top + 0.25, 0.42, 0.42, theme_color(theme, "accent"), radius=True)
+            add_text(slide, left + 0.34, top + 0.37, 0.18, 0.14, str(index + 1), theme, 7, "surface", True, "center",
+                     density=density, overflow=overflow)
+            add_text(slide, left + 0.78, top + 0.25, 2.45, 0.28, role["title"], theme, 12, "primary", True,
+                     density=density, overflow=overflow, warnings=warnings, context="team role title")
+            add_text(slide, left + 0.78, top + 0.72, 2.45, 0.75, "\n".join([f"- {line}" for line in role["points"][:3]]),
+                     theme, 10, "secondary", density=density, overflow=overflow, min_font_size=9, warnings=warnings, context="team role body")
+
     def render_table_slide(
         presentation,
         slide_spec: Dict[str, Any],
@@ -1621,6 +2057,48 @@ def register_workflow_tools(
                          theme_color(theme, "surface"), theme_color(theme, "line"))
                 add_text(slide, 0.94 + col * col_width, y + 0.13, col_width - 0.18, 0.24, value, theme, 10, "secondary",
                          alignment="center", density=density, overflow=overflow, min_font_size=10, warnings=warnings, context="table cell")
+
+    def render_risk_matrix_slide(
+        presentation,
+        slide_spec: Dict[str, Any],
+        theme: Dict[str, Any],
+        density: str,
+        overflow: str,
+        warnings: List[str],
+    ) -> None:
+        slide = make_blank_slide(presentation)
+        add_slide_header(slide, slide_spec.get("title") or "风险矩阵",
+                         theme, slide_spec.get("kicker") or "RISK MATRIX")
+        risks = trim_items(slide_spec.get("risks") or slide_spec.get("risk_matrix") or slide_spec.get("items") or [], 6, warnings, "risks")
+        headers = trim_items(slide_spec.get("headers") or ["风险", "等级", "影响", "应对"], 4, warnings, "risk columns")
+        col_widths = [3.2, 1.45, 3.0, 3.3]
+        left = 0.85
+        top = 1.62
+        row_height = 0.62
+        x = left
+        for index, header in enumerate(headers):
+            width = col_widths[index] if index < len(col_widths) else 2.5
+            add_rect(slide, x, top, width, row_height, theme_color(theme, "primary"), theme_color(theme, "line"))
+            add_text(slide, x + 0.08, top + 0.16, width - 0.16, 0.2, header, theme, 10, "surface", True,
+                     "center", density=density, overflow=overflow, warnings=warnings, context="risk header")
+            x += width
+        for row_index, risk in enumerate(risks):
+            risk_dict = risk if isinstance(risk, dict) else {"risk": str(risk)}
+            values = [
+                risk_dict.get("risk") or risk_dict.get("title") or risk_dict.get("name") or "",
+                risk_dict.get("level") or risk_dict.get("severity") or "",
+                risk_dict.get("impact") or risk_dict.get("probability") or risk_dict.get("description") or "",
+                risk_dict.get("mitigation") or risk_dict.get("action") or risk_dict.get("response") or "",
+            ]
+            y = top + row_height * (row_index + 1)
+            x = left
+            for col_index, value in enumerate(values[:len(headers)]):
+                width = col_widths[col_index] if col_index < len(col_widths) else 2.5
+                add_rect(slide, x, y, width, row_height, theme_color(theme, "surface"), theme_color(theme, "line"))
+                color_role = "danger" if col_index == 1 and str(value).strip() in {"高", "High", "high"} else "secondary"
+                add_text(slide, x + 0.08, y + 0.14, width - 0.16, 0.22, str(value), theme, 9, color_role,
+                         alignment="center", density=density, overflow=overflow, min_font_size=8, warnings=warnings, context="risk cell")
+                x += width
 
     def render_literature_matrix_slide(
         presentation,
@@ -1662,6 +2140,74 @@ def register_workflow_tools(
             overflow,
             warnings,
         )
+
+    def render_case_study_slide(
+        presentation,
+        slide_spec: Dict[str, Any],
+        theme: Dict[str, Any],
+        density: str,
+        overflow: str,
+        warnings: List[str],
+    ) -> None:
+        slide = make_blank_slide(presentation)
+        add_slide_header(slide, slide_spec.get("title") or "案例分析",
+                         theme, slide_spec.get("kicker") or "CASE STUDY")
+        case_name = slide_spec.get("case_name") or slide_spec.get("statement") or ""
+        if case_name:
+            add_rect(slide, 0.85, 1.42, 11.45, 0.48, theme_color(theme, "light"), theme_color(theme, "line"), True)
+            add_text(slide, 1.08, 1.56, 10.95, 0.2, case_name, theme, 11, "secondary", True,
+                     density=density, overflow=overflow, warnings=warnings, context="case study name")
+
+        image_path = slide_spec.get("image_path", "")
+        if image_path and os.path.exists(image_path):
+            ppt_utils.add_image(slide, image_path, 0.85, 2.18, 4.45, 3.35)
+        else:
+            add_card(slide, 0.85, 2.18, 4.45, 3.35, slide_spec.get("background_title") or "案例背景",
+                     safe_lines(slide_spec.get("case_background"), 4), theme, "accent", density, overflow, warnings)
+        if slide_spec.get("image_caption") and image_path and os.path.exists(image_path):
+            add_text(slide, 0.9, 5.68, 4.35, 0.25, slide_spec.get("image_caption"), theme, 8, "muted",
+                     alignment="center", density=density, overflow=overflow, warnings=warnings)
+
+        sections = [
+            (5.75, 2.18, slide_spec.get("actions_title") or "主要做法", safe_lines(slide_spec.get("case_actions"), 4), "primary"),
+            (5.75, 4.02, slide_spec.get("results_title") or "实施成效", safe_lines(slide_spec.get("case_results"), 4), "success"),
+        ]
+        for left, top, title, lines, role in sections:
+            add_card(slide, left, top, 6.2, 1.45, title if lines else "", lines, theme, role, density, overflow, warnings)
+        insights = safe_lines(slide_spec.get("case_insights"), 3)
+        if insights:
+            add_card(slide, 0.85, 5.88, 11.1, 0.78, slide_spec.get("insights_title") or "经验启示",
+                     insights, theme, "accent", density, overflow, warnings)
+
+    def render_image_showcase_slide(
+        presentation,
+        slide_spec: Dict[str, Any],
+        theme: Dict[str, Any],
+        density: str,
+        overflow: str,
+        warnings: List[str],
+    ) -> None:
+        slide = make_blank_slide(presentation)
+        add_slide_header(slide, slide_spec.get("title") or "图像展示",
+                         theme, slide_spec.get("kicker") or "SHOWCASE")
+        statement = slide_spec.get("statement") or ""
+        if statement:
+            add_text(slide, 0.85, 1.38, 11.6, 0.32, statement, theme, 12, "secondary",
+                     density=density, overflow=overflow, warnings=warnings, context="image showcase statement")
+        top = 1.82 if statement else 1.58
+        image_path = slide_spec.get("image_path", "")
+        if image_path and os.path.exists(image_path):
+            ppt_utils.add_image(slide, image_path, 0.95, top, 11.35, 4.65)
+        else:
+            add_rect(slide, 0.95, top, 11.35, 4.65, theme_color(theme, "surface"), theme_color(theme, "line"), True)
+        caption = slide_spec.get("image_caption") or ""
+        if caption:
+            add_text(slide, 1.05, top + 4.82, 11.1, 0.28, caption, theme, 9, "muted",
+                     alignment="center", density=density, overflow=overflow, warnings=warnings, context="image showcase caption")
+        notes = safe_lines(slide_spec.get("notes") or slide_spec.get("items"), 3)
+        if notes:
+            add_text(slide, 1.05, 6.65, 11.1, 0.35, "；".join(notes), theme, 10, "secondary",
+                     density=density, overflow=overflow, warnings=warnings, context="image showcase notes")
 
     def render_research_questions_slide(
         presentation,
@@ -2202,8 +2748,23 @@ def register_workflow_tools(
         elif slide_type == "party_summary_panel":
             render_party_work_summary_slide(
                 presentation, slide_spec, theme, density, overflow, warnings)
+        elif slide_type == "agenda":
+            render_agenda_slide(
+                presentation, slide_spec, theme, density, overflow, warnings)
+        elif slide_type == "section_agenda":
+            render_section_agenda_slide(
+                presentation, slide_spec, theme, density, overflow, warnings)
         elif slide_type in {"comparison"}:
             render_two_column_slide(
+                presentation, slide_spec, theme, density, overflow, warnings)
+        elif slide_type == "problem_solution":
+            render_problem_solution_slide(
+                presentation, slide_spec, theme, density, overflow, warnings)
+        elif slide_type == "before_after":
+            render_before_after_slide(
+                presentation, slide_spec, theme, density, overflow, warnings)
+        elif slide_type == "swot":
+            render_swot_slide(
                 presentation, slide_spec, theme, density, overflow, warnings)
         elif slide_type in {"process"}:
             render_process_slide(presentation, slide_spec,
@@ -2211,6 +2772,9 @@ def register_workflow_tools(
         elif slide_type == "timeline":
             render_timeline_slide(presentation, slide_spec,
                                   theme, density, overflow, warnings)
+        elif slide_type == "roadmap":
+            render_roadmap_slide(presentation, slide_spec,
+                                 theme, density, overflow, warnings)
         elif slide_type in {"cards", "section"}:
             render_cards_slide(presentation, slide_spec,
                                theme, density, overflow, warnings)
@@ -2220,11 +2784,23 @@ def register_workflow_tools(
         elif slide_type == "architecture":
             render_architecture_slide(
                 presentation, slide_spec, theme, density, overflow, warnings)
+        elif slide_type == "team_roles":
+            render_team_roles_slide(
+                presentation, slide_spec, theme, density, overflow, warnings)
         elif slide_type == "table":
             render_table_slide(presentation, slide_spec,
                                theme, density, overflow, warnings)
+        elif slide_type == "risk_matrix":
+            render_risk_matrix_slide(
+                presentation, slide_spec, theme, density, overflow, warnings)
         elif slide_type == "literature_matrix":
             render_literature_matrix_slide(
+                presentation, slide_spec, theme, density, overflow, warnings)
+        elif slide_type == "case_study":
+            render_case_study_slide(
+                presentation, slide_spec, theme, density, overflow, warnings)
+        elif slide_type == "image_showcase":
+            render_image_showcase_slide(
                 presentation, slide_spec, theme, density, overflow, warnings)
         elif slide_type == "research_questions":
             render_research_questions_slide(
@@ -3465,7 +4041,7 @@ def register_workflow_tools(
                 for theme_id, theme in get_builtin_themes().items()
             ],
             "default_theme": "business_blue",
-            "layouts": get_builtin_layouts(),
+            "layouts": visible_builtin_layouts(),
             "default_layout_sequence": [
                 "cover",
                 "summary",

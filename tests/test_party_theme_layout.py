@@ -16,13 +16,27 @@ class PartyThemeLayoutTests(unittest.TestCase):
 
         self.assertIn("party_red", theme_ids)
         self.assertIn("expert_forum_blue", theme_ids)
+        self.assertNotIn("government_blue", theme_ids)
+        self.assertIn("tech_dark", theme_ids)
+        self.assertNotIn("education_warm", theme_ids)
         self.assertNotIn("academic_default", theme_ids)
         self.assertIn("party_summary_panel", layout_ids)
-        self.assertIn("expert_body_panel", layout_ids)
-        self.assertIn("expert_card_overview", layout_ids)
-        self.assertIn("expert_image_text", layout_ids)
-        self.assertIn("expert_process_path", layout_ids)
-        self.assertIn("expert_scope_list", layout_ids)
+        self.assertNotIn("expert_body_panel", layout_ids)
+        self.assertNotIn("expert_card_overview", layout_ids)
+        self.assertNotIn("expert_image_text", layout_ids)
+        self.assertNotIn("expert_process_path", layout_ids)
+        self.assertNotIn("expert_scope_list", layout_ids)
+        self.assertIn("agenda", layout_ids)
+        self.assertIn("problem_solution", layout_ids)
+        self.assertIn("case_study", layout_ids)
+        self.assertIn("section_agenda", layout_ids)
+        self.assertNotIn("before_after", layout_ids)
+        self.assertNotIn("swot", layout_ids)
+        self.assertIn("risk_matrix", layout_ids)
+        self.assertIn("roadmap", layout_ids)
+        self.assertNotIn("team_roles", layout_ids)
+        self.assertIn("image_showcase", layout_ids)
+        self.assertNotIn("architecture", layout_ids)
         self.assertNotIn("party_work_summary", layout_ids)
         self.assertNotIn("expert_text_panel", layout_ids)
         self.assertNotIn("template_names", options)
@@ -57,6 +71,147 @@ class PartyThemeLayoutTests(unittest.TestCase):
         self.assertEqual(result["theme"], "party_red")
         self.assertEqual(result["rendered_slide_types"], ["party_summary_panel"])
         self.assertEqual(result["slide_count"], 1)
+
+    def test_priority_layouts_can_be_rendered(self):
+        result = call_tool(
+            "generate_presentation",
+            presentation_id="test_priority_layouts",
+            title="常用版式测试",
+            theme="business_blue",
+            auto_cover=False,
+            show_footer=False,
+            show_page_number=False,
+            slides=[
+                {
+                    "type": "agenda",
+                    "title": "汇报提纲",
+                    "agenda": [
+                        {"title": "研究背景", "points": ["说明问题来源"]},
+                        {"title": "解决方案", "points": ["说明推进路径"]},
+                    ],
+                },
+                {
+                    "type": "problem_solution",
+                    "title": "问题与方案",
+                    "problem": ["流程分散", "信息重复录入"],
+                    "causes": ["系统割裂", "标准不统一"],
+                    "solution": ["统一入口", "建立数据规范"],
+                    "result": "提升协同效率。",
+                },
+                {
+                    "type": "case_study",
+                    "title": "案例分析",
+                    "case_name": "试点项目",
+                    "case_background": "围绕重点场景开展试点。",
+                    "case_actions": ["梳理流程", "上线工具"],
+                    "case_results": ["效率提升", "体验改善"],
+                    "case_insights": ["标准化后再推广"],
+                },
+            ],
+        )
+
+        self.assertEqual(result["rendered_slide_types"], ["agenda", "problem_solution", "case_study"])
+        self.assertEqual(result["slide_count"], 3)
+
+    def test_additional_priority_layouts_can_be_rendered(self):
+        result = call_tool(
+            "generate_presentation",
+            presentation_id="test_additional_priority_layouts",
+            title="扩展版式测试",
+            theme="government_blue",
+            auto_cover=False,
+            show_footer=False,
+            show_page_number=False,
+            slides=[
+                {
+                    "type": "section_agenda",
+                    "title": "第一部分 工作基础",
+                    "section_no": "01",
+                    "agenda": [
+                        {"title": "政策依据", "points": ["说明背景"]},
+                        {"title": "实施范围", "points": ["说明边界"]},
+                    ],
+                },
+                {
+                    "type": "before_after",
+                    "title": "改造前后对比",
+                    "before": ["流程分散", "口径不一"],
+                    "after": ["统一入口", "统一标准"],
+                    "metrics": [{"label": "效率", "value": "提升30%"}],
+                },
+                {
+                    "type": "swot",
+                    "title": "形势分析",
+                    "strengths": ["基础较好"],
+                    "weaknesses": ["协同不足"],
+                    "opportunities": ["政策支持"],
+                    "threats": ["外部不确定"],
+                },
+                {
+                    "type": "risk_matrix",
+                    "title": "风险清单",
+                    "risks": [
+                        {"risk": "进度延迟", "level": "高", "impact": "影响上线", "mitigation": "周例会跟踪"},
+                    ],
+                },
+                {
+                    "type": "roadmap",
+                    "title": "推进路线图",
+                    "roadmap": [
+                        {"title": "启动", "points": ["完成调研"]},
+                        {"title": "试点", "points": ["小范围验证"]},
+                    ],
+                },
+                {
+                    "type": "team_roles",
+                    "title": "职责分工",
+                    "roles": [
+                        {"title": "项目组", "points": ["统筹推进", "风险协调"]},
+                        {"title": "业务组", "points": ["需求确认"]},
+                    ],
+                },
+                {
+                    "type": "image_showcase",
+                    "title": "现场图片",
+                    "image_path": "missing-image.png",
+                    "image_caption": "示意说明",
+                    "notes": ["用于验证无图片占位也可渲染"],
+                },
+            ],
+        )
+
+        self.assertEqual(
+            result["rendered_slide_types"],
+            ["section_agenda", "before_after", "swot", "risk_matrix", "roadmap", "team_roles", "image_showcase"],
+        )
+        self.assertEqual(result["theme"], "business_blue")
+        self.assertEqual(result["slide_count"], 7)
+
+    def test_hidden_layouts_remain_renderable_for_compatibility(self):
+        result = call_tool(
+            "generate_presentation",
+            presentation_id="test_hidden_layouts_compatibility",
+            title="隐藏版式兼容",
+            theme="expert_forum_blue",
+            auto_cover=False,
+            show_footer=False,
+            show_page_number=False,
+            slides=[
+                {
+                    "type": "expert_body_panel",
+                    "title": "专家正文页",
+                    "panel_points": ["要点一"],
+                    "body_paragraphs": ["正文说明。"],
+                },
+                {
+                    "type": "team_roles",
+                    "title": "职责分工",
+                    "roles": [{"title": "项目组", "points": ["统筹推进"]}],
+                },
+            ],
+        )
+
+        self.assertEqual(result["rendered_slide_types"], ["expert_body_panel", "team_roles"])
 
     def test_expert_body_panel_can_be_rendered(self):
         result = call_tool(
