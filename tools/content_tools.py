@@ -2,7 +2,7 @@
 Content management tools for PowerPoint MCP Server.
 Handles slides, text, images, and content manipulation.
 """
-from typing import Dict, List, Any, Union
+from typing import Dict, List
 from mcp.server.fastmcp import FastMCP
 from mcp.types import ToolAnnotations
 import utils as ppt_utils

@@ -3,7 +3,7 @@ Hyperlink management tools for PowerPoint MCP Server.
 Implements hyperlink operations for text shapes and runs.
 """
 
-from typing import Dict, List
+from typing import Dict
 from mcp.types import ToolAnnotations
 
 

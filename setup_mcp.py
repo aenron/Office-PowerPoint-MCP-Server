@@ -122,7 +122,7 @@ def setup_venv():
         print(f"Error: Could not execute {pip_path}")
         print("Try activating the virtual environment manually and installing requirements:")
         if is_windows:
-            print(f".venv\\Scripts\\activate")
+            print(".venv\\Scripts\\activate")
         else:
             print("source .venv/bin/activate")
         print("pip install mcp[cli] python-pptx")
@@ -350,7 +350,7 @@ def create_sample_template(templates_dir):
     try:
         # Import required modules for creating a sample template
         from pptx import Presentation
-        from pptx.util import Inches, Pt
+        from pptx.util import Pt
         from pptx.dml.color import RGBColor
         from pptx.enum.text import PP_ALIGN
         

@@ -8,10 +8,7 @@ from pptx.enum.chart import XL_CHART_TYPE
 from pptx.enum.text import PP_ALIGN
 from pptx.util import Inches, Pt
 from pptx.dml.color import RGBColor
-from typing import Dict, List, Tuple, Any
-import tempfile
-import os
-import base64
+from typing import Any, Dict, List, Optional, Tuple
 
 
 def add_slide(presentation: Presentation, layout_index: int = 1) -> Tuple:
@@ -121,7 +118,7 @@ def add_bullet_points(placeholder, bullet_points: List[str]) -> None:
 def add_textbox(slide, left: float, top: float, width: float, height: float, text: str,
                 font_size: int = None, font_name: str = None, bold: bool = None,
                 italic: bool = None, underline: bool = None,
-                color: Tuple[int, int, int] = None, bg_color: Tuple[int, int, int] = None,
+                color: Optional[Tuple[int, int, int]] = None, bg_color: Optional[Tuple[int, int, int]] = None,
                 alignment: str = None, vertical_alignment: str = None,
                 auto_fit: bool = True) -> Any:
     """
@@ -173,7 +170,7 @@ def add_textbox(slide, left: float, top: float, width: float, height: float, tex
 
 
 def format_text(text_frame, font_size: int = None, font_name: str = None,
-                bold: bool = None, italic: bool = None, color: Tuple[int, int, int] = None,
+                bold: bool = None, italic: bool = None, color: Optional[Tuple[int, int, int]] = None,
                 alignment: str = None) -> None:
     """
     Format text in a text frame.
@@ -216,7 +213,7 @@ def format_text(text_frame, font_size: int = None, font_name: str = None,
 
 def format_text_advanced(text_frame, font_size: int = None, font_name: str = None,
                          bold: bool = None, italic: bool = None, underline: bool = None,
-                         color: Tuple[int, int, int] = None, bg_color: Tuple[int, int, int] = None,
+                         color: Optional[Tuple[int, int, int]] = None, bg_color: Optional[Tuple[int, int, int]] = None,
                          alignment: str = None, vertical_alignment: str = None) -> Dict:
     """
     Advanced text formatting with comprehensive options.
@@ -339,7 +336,7 @@ def add_table(slide, rows: int, cols: int, left: float, top: float, width: float
 
 def format_table_cell(cell, font_size: int = None, font_name: str = None,
                       bold: bool = None, italic: bool = None,
-                      color: Tuple[int, int, int] = None, bg_color: Tuple[int, int, int] = None,
+                      color: Optional[Tuple[int, int, int]] = None, bg_color: Optional[Tuple[int, int, int]] = None,
                       alignment: str = None, vertical_alignment: str = None) -> None:
     """
     Format a table cell.
@@ -469,7 +466,7 @@ def format_chart(chart, has_legend: bool = True, legend_position: str = 'right',
                 chart.category_axis.axis_title.text_frame.text = x_axis_title
             if y_axis_title and hasattr(chart, 'value_axis'):
                 chart.value_axis.axis_title.text_frame.text = y_axis_title
-        except:
+        except Exception:
             pass  # Axis titles may not be available for all chart types
 
     except Exception:
@@ -504,7 +501,7 @@ def extract_slide_text_content(slide) -> Dict:
                 if title_text:
                     text_content["slide_title"] = title_text
                     all_texts.append(title_text)
-            except:
+            except Exception:
                 pass
 
         # Extract text from all shapes
@@ -561,7 +558,7 @@ def extract_slide_text_content(slide) -> Dict:
                             "table_content": table_texts
                         })
 
-            except Exception as e:
+            except Exception:
                 # Skip shapes that can't be processed
                 continue
 

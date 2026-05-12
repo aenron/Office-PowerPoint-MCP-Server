@@ -3,6 +3,7 @@ PowerPoint utilities package.
 Organized utility functions for PowerPoint manipulation.
 """
 
+# ruff: noqa: F403, F405
 from .core_utils import *
 from .presentation_utils import *
 from .content_utils import *

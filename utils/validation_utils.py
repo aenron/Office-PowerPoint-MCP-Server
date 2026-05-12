@@ -2,7 +2,7 @@
 Validation utilities for PowerPoint MCP Server.
 Functions for validating and fixing slide content, text fit, and layouts.
 """
-from typing import Dict, List, Any
+from typing import Dict, List
 
 
 def validate_text_fit(shape, text_content: str = None, font_size: int = 12) -> Dict:
@@ -273,7 +273,7 @@ def shapes_overlap(shape1, shape2) -> bool:
 
         # Check for overlap
         return not (right1 <= left2 or right2 <= left1 or bottom1 <= top2 or bottom2 <= top1)
-    except:
+    except Exception:
         return False
 
 
@@ -297,7 +297,7 @@ def check_minimum_spacing(shapes: List) -> float:
                 min_spacing = min(min_spacing, distance)
 
         return min_spacing if min_spacing != float('inf') else 0
-    except:
+    except Exception:
         return 0
 
 
@@ -330,5 +330,5 @@ def calculate_shape_distance(shape1, shape2) -> float:
 
         # Return minimum edge distance
         return min(edge_distance_x, edge_distance_y)
-    except:
+    except Exception:
         return 0

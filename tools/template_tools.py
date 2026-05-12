@@ -356,7 +356,6 @@ def register_template_tools(app: FastMCP, presentations: Dict, get_current_prese
 
         try:
             optimizations_applied = []
-            manager = template_utils.get_enhanced_template_manager()
 
             # Analyze each text shape on the slide
             for i, shape in enumerate(slide.shapes):

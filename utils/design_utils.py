@@ -5,7 +5,7 @@ Functions for themes, colors, fonts, backgrounds, and visual effects.
 from pptx import Presentation
 from pptx.util import Inches, Pt
 from pptx.dml.color import RGBColor
-from typing import Dict, List, Tuple, Any
+from typing import Dict, List, Tuple
 from PIL import Image, ImageEnhance, ImageFilter, ImageDraw
 import tempfile
 import os
@@ -242,8 +242,6 @@ def enhance_existing_slide(slide, color_scheme: str = 'modern_blue',
     try:
         # Enhance title
         if enhance_title and slide.shapes.title:
-            primary_color = get_professional_color(color_scheme, 'primary')
-            title_font = get_professional_font('title', 'large')
             # Apply title formatting (simplified)
             enhancements_applied.append("title")
 

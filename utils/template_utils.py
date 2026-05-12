@@ -5,13 +5,11 @@ Combines features from both basic and enhanced template systems.
 """
 import json
 import os
-import re
 from typing import Dict, List, Any, Tuple
 from pptx import Presentation
 from pptx.util import Inches, Pt
 from pptx.dml.color import RGBColor
 from pptx.enum.text import PP_ALIGN, MSO_VERTICAL_ANCHOR
-from pptx.enum.shapes import MSO_SHAPE
 import utils.content_utils as content_utils
 import utils.design_utils as design_utils
 
@@ -157,7 +155,6 @@ class VisualEffectsManager:
         try:
             # Apply shadow if specified
             if 'shadow' in effect_config:
-                shadow_config = effect_config['shadow']
                 # Simplified shadow application
                 pass
 
@@ -784,7 +781,7 @@ def create_shape_element(slide, element: Dict, templates_data: Dict, color_schem
             pass
 
         return shape
-    except Exception as e:
+    except Exception:
         # Create a simple rectangle as fallback
         textbox = slide.shapes.add_textbox(
             Inches(pos['left']),
@@ -899,7 +896,7 @@ def create_chart_element(slide, element: Dict, templates_data: Dict, color_schem
             content_utils.format_chart(chart, title=chart_title)
 
         return chart
-    except Exception as e:
+    except Exception:
         # Create placeholder if chart creation fails
         textbox = slide.shapes.add_textbox(
             Inches(pos['left']),
@@ -932,7 +929,6 @@ def apply_slide_background(slide, background_config: Dict, templates_data: Dict,
         design_utils.create_professional_gradient_background(
             slide, color_scheme, style, direction)
     elif bg_type == 'solid':
-        color_role = background_config.get('color_role', 'light')
         # Note: Solid background would require XML manipulation for proper implementation
         pass
 
