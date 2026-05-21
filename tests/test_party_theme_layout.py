@@ -1,6 +1,10 @@
 import unittest
+import gc
+from base64 import b64decode
+from pathlib import Path
 
 import ppt_mcp_server
+from pptx.enum.shapes import MSO_SHAPE_TYPE
 
 
 def call_tool(name, **kwargs):
@@ -8,6 +12,46 @@ def call_tool(name, **kwargs):
 
 
 class PartyThemeLayoutTests(unittest.TestCase):
+    def test_generate_presentation_adds_fixed_logo_to_every_slide(self):
+        logo_path = Path("templates/assets/logo.png")
+        logo_path.parent.mkdir(parents=True, exist_ok=True)
+        original_logo = logo_path.read_bytes() if logo_path.exists() else None
+        # 1x1 transparent PNG, enough for python-pptx to create a picture shape.
+        logo_path.write_bytes(b64decode(
+            "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="
+        ))
+        try:
+            result = call_tool(
+                "generate_presentation",
+                presentation_id="test_fixed_logo_every_slide",
+                title="固定 Logo 测试",
+                auto_cover=False,
+                show_footer=False,
+                show_page_number=False,
+                slides=[
+                    {"type": "summary", "title": "第一页", "points": ["内容"]},
+                    {"type": "cards", "title": "第二页", "items": [{"title": "卡片", "points": ["内容"]}]},
+                ],
+            )
+
+            self.assertEqual(result["slide_count"], 2)
+            presentation = ppt_mcp_server.presentations["test_fixed_logo_every_slide"]
+            for slide in presentation.slides:
+                logos = [
+                    shape for shape in slide.shapes
+                    if shape.shape_type == MSO_SHAPE_TYPE.PICTURE
+                    and 12.0 < shape.left.inches < 12.8
+                    and 0.1 < shape.top.inches < 0.6
+                ]
+                self.assertEqual(len(logos), 1)
+        finally:
+            ppt_mcp_server.presentations.pop("test_fixed_logo_every_slide", None)
+            gc.collect()
+            if original_logo is None:
+                logo_path.unlink(missing_ok=True)
+            else:
+                logo_path.write_bytes(original_logo)
+
     def test_party_theme_and_layout_are_listed(self):
         options = call_tool("list_presentation_options")
 

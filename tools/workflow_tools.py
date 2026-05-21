@@ -33,6 +33,12 @@ def register_workflow_tools(
     default_export_dir = download_dir
     download_url = os.environ.get("DOWNLOAD_URL")
     emu_per_inch = 914400
+    fixed_logo_path = os.path.join(project_root, "templates", "assets", "logo.png")
+    fixed_logo_shape_name = "fixed_deck_logo"
+    fixed_logo_left = 12.22
+    fixed_logo_top = 0.22
+    fixed_logo_width = 0.55
+    fixed_logo_height = 0.55
     profile_dir = os.path.join(project_root, "templates", "profiles")
     os.makedirs(download_dir, exist_ok=True)
     os.makedirs(profile_dir, exist_ok=True)
@@ -1157,6 +1163,30 @@ def register_workflow_tools(
             if show_page_number:
                 add_text(slide, 11.75, 7.0, 0.85, 0.22,
                          f"{index:02d}/{total:02d}", theme, 7, "muted", alignment="right")
+
+    def add_fixed_deck_logo(presentation, warnings: Optional[List[str]] = None) -> None:
+        if not os.path.exists(fixed_logo_path):
+            if warnings is not None:
+                warnings.append(
+                    f"Fixed deck logo was not added because the logo file does not exist: {fixed_logo_path}")
+            return
+
+        for slide in presentation.slides:
+            if any(getattr(shape, "name", "") == fixed_logo_shape_name for shape in slide.shapes):
+                continue
+            try:
+                logo = ppt_utils.add_image(
+                    slide,
+                    fixed_logo_path,
+                    fixed_logo_left,
+                    fixed_logo_top,
+                    fixed_logo_width,
+                    fixed_logo_height,
+                )
+                logo.name = fixed_logo_shape_name
+            except Exception as exc:
+                if warnings is not None:
+                    warnings.append(f"Fixed deck logo could not be added: {str(exc)}")
 
     def inspect_presentation_quality(presentation, warnings: List[str]) -> Dict[str, Any]:
         min_font_size: Optional[float] = None
@@ -4302,6 +4332,7 @@ def register_workflow_tools(
             show_page_number,
             normalized_visual_level,
         )
+        add_fixed_deck_logo(presentation, warnings)
         quality = inspect_presentation_quality(presentation, warnings)
 
         presentations[presentation_id] = presentation
@@ -4629,6 +4660,8 @@ def register_workflow_tools(
                 removed_slides = remove_unprofiled_slides(
                     presentation, used_slide_indices)
 
+            warnings: List[str] = []
+            add_fixed_deck_logo(presentation, warnings)
             effective_presentation_id = presentation_id or f"profile_{slugify(profile_name)}"
             effective_output_name = output_name or content.get(
                 "output_name") or f"{effective_presentation_id}.pptx"
@@ -4650,6 +4683,7 @@ def register_workflow_tools(
                 "slide_count": len(presentation.slides),
                 "removed_unmapped_slides": removed_slides,
                 "field_results": field_results,
+                "warnings": warnings,
             }
         except Exception as exc:
             return {"error": f"Failed to generate from template profile: {str(exc)}"}
@@ -4834,6 +4868,7 @@ def register_workflow_tools(
             removed_template_tail_slides = remove_slides_from(
                 presentation, len(merged_outline))
 
+        add_fixed_deck_logo(presentation, warnings)
         projects.setdefault(presentation_id, {})
         projects[presentation_id]["outline"] = merged_outline
 
